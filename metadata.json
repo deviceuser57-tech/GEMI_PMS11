@@ -1,0 +1,6 @@
+{
+  "name": "PMS-11 Offshore Closure Loop",
+  "description": "نظام إدارة حلقات الإغلاق والجاهزية التشغيلية لبارجة PMS-11 ومتابعة الـ 40 شيت عمل وحزم العمل والسلامة البحرية",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

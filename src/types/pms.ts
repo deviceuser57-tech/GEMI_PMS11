@@ -41,7 +41,8 @@ export type EntityType =
   | 'relationship_type'
   | 'audit_config'
   | 'crew_heli_accom_dash'
-  | 'gap_wps';
+  | 'gap_wps'
+  | 'daily_log';
 
 export type Department =
   | 'All'

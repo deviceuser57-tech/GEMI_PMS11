@@ -8,7 +8,9 @@ import {
   Globe,
   Download,
   AlertCircle,
-  ShieldCheck
+  ShieldCheck,
+  Bell,
+  FileText
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -20,6 +22,11 @@ interface HeaderProps {
   onOpenExcelManager: () => void;
   onOpenSearch: () => void;
   onExportExcel: () => void;
+  onOpenNotifications: () => void;
+  unreadNotificationsCount: number;
+  onExportPdf: () => void;
+  isOnline: boolean;
+  syncQueueCount: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,7 +37,12 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNewRecord,
   onOpenExcelManager,
   onOpenSearch,
-  onExportExcel
+  onExportExcel,
+  onOpenNotifications,
+  unreadNotificationsCount,
+  onExportPdf,
+  isOnline,
+  syncQueueCount
 }) => {
   const departments: Department[] = [
     'All',
@@ -68,6 +80,14 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-800">
                 <ShieldCheck className="w-3 h-3" />
                 {isArabic ? 'بوابة 1: نشطة' : 'GATE-1 ACTIVE'}
+              </span>
+              <span className={`hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border ${
+                isOnline
+                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
+                  : 'bg-amber-950/80 text-amber-300 border-amber-800 animate-pulse'
+              }`}>
+                <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                {isOnline ? (isArabic ? 'متصل (Online)' : 'Online') : (isArabic ? `غير متصل - مزامنة (${syncQueueCount})` : `Offline - Sync (${syncQueueCount})`)}
               </span>
             </div>
             <p className="text-[11px] text-slate-400 hidden sm:block">
@@ -118,6 +138,30 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
             <span className="hidden lg:inline">{isArabic ? 'إدارة الـ 40 شيت' : '40 Sheets Manager'}</span>
+          </button>
+
+          {/* PDF Export Button */}
+          <button
+            onClick={onExportPdf}
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-medium transition-all flex items-center gap-1.5"
+            title="Export Professional PDF Report"
+          >
+            <FileText className="w-4 h-4 text-rose-400" />
+            <span className="hidden md:inline">{isArabic ? 'تصدير PDF' : 'PDF Report'}</span>
+          </button>
+
+          {/* Notification Center Bell */}
+          <button
+            onClick={onOpenNotifications}
+            className="relative p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition-all"
+            title="Notification Center"
+          >
+            <Bell className="w-4 h-4 text-amber-400" />
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500 text-white animate-pulse">
+                {unreadNotificationsCount}
+              </span>
+            )}
           </button>
 
           {/* Export Button */}

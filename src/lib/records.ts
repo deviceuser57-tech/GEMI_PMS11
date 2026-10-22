@@ -469,6 +469,16 @@ export const ENTITY_DEFINITIONS: Record<EntityType, EntityDefinition> = {
     idPrefix: 'GWPS',
     requiredFields: ['rid', 'title'],
     description: 'ربط الفجوات المفتوحة وعدم المطابقة بحزم العمل المتأثرة'
+  },
+  daily_log: {
+    entity: 'daily_log',
+    sheetName: 'Daily_Logs',
+    arabicName: 'إقرار العمليات اليومي',
+    englishName: 'Daily Operations Checkpoint',
+    defaultDepartment: 'HSE & Safety',
+    idPrefix: 'CHK',
+    requiredFields: ['rid', 'title', 'status'],
+    description: 'سجل إقرارات الحالة اليومية لسلامة وعمليات البارجة (All Clear أو Issue Detected)'
   }
 };
 

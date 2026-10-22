@@ -21,7 +21,8 @@ import {
   Flame,
   UserCheck,
   FileCode,
-  GitCommit
+  GitCommit,
+  Shield
 } from 'lucide-react';
 
 export type ActiveTab =
@@ -48,7 +49,10 @@ export type ActiveTab =
   | 'responsibilities'
   | 'sources'
   | 'audit'
-  | 'gantt';
+  | 'gantt'
+  | 'smart_reports'
+  | 'dependency_graph'
+  | 'admin_console';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -104,6 +108,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
           icon: GitCommit,
           badge: 'Gantt',
           badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+        },
+        {
+          id: 'smart_reports' as ActiveTab,
+          label: isArabic ? 'نظام التقارير الذكية' : 'Smart Reports & Filters',
+          sub: isArabic ? 'تقارير مخصصة وفلاتر متعددة' : 'Advanced Filterable Reports',
+          icon: FileText,
+          badge: 'Reports',
+          badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+        },
+        {
+          id: 'dependency_graph' as ActiveTab,
+          label: isArabic ? 'خريطة الاعتماديات (D3 Graph)' : 'Dependency D3 Graph',
+          sub: isArabic ? 'استكشاف التعقيدات والاختناقات' : 'Interactive Blocking Map',
+          icon: GitBranch,
+          badge: 'D3',
+          badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+        },
+        {
+          id: 'admin_console' as ActiveTab,
+          label: isArabic ? 'وحدة التحكم الإدارية (Admin)' : 'Admin Console & RBAC',
+          sub: isArabic ? 'إدارة المستخدمين والصلاحيات' : 'User Roles & System Governance',
+          icon: Shield,
+          badge: 'Admin',
+          badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40'
         },
       ]
     },

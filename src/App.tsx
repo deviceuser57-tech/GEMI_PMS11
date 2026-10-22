@@ -33,8 +33,13 @@ import { AuditTrailView } from './components/views/AuditTrailView';
 import { RecordDetailModal } from './components/modals/RecordDetailModal';
 import { RiskMatrixView } from './components/views/RiskMatrixView';
 import { GanttTimelineView } from './components/views/GanttTimelineView';
+import { SmartReportsView } from './components/views/SmartReportsView';
+import { DependencyGraphView } from './components/views/DependencyGraphView';
+import { AdminConsoleView } from './components/views/AdminConsoleView';
 import { NewRecordModal } from './components/modals/NewRecordModal';
 import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
+import { NotificationCenterModal } from './components/NotificationCenterModal';
+import { generateMonthlyReport, generateAuditLogsReport } from './lib/pdfGenerator';
 
 export default function App() {
   const [records, setRecords] = useState<BaseRecord[]>(getStoredRecords);
@@ -81,27 +86,125 @@ export default function App() {
 
   // Compute live executive metrics
   const metrics = computeDashboardMetrics(records);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const now = new Date();
+  const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const unreadNotificationsCount = records.filter(r => {
+    if (r.entity === 'crew_certificate' && r.expiry_date) {
+      const exp = new Date(r.expiry_date);
+      if (exp < now || exp <= in30Days) return true;
+    }
+    if (r.due_date && r.status !== 'Closed' && r.status !== 'Compliant' && r.status !== 'Approved') {
+      if (new Date(r.due_date) < now) return true;
+    }
+    if ((r.entity === 'gap' || r.entity === 'risk') && r.status !== 'Closed' && (r.data?.severity === 'Critical' || r.data?.severity === 'High')) {
+      return true;
+    }
+    return false;
+  }).length;
+
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const [syncQueueCount, setSyncQueueCount] = useState<number>(() => {
+    try {
+      const q = localStorage.getItem('pms_sync_queue');
+      return q ? JSON.parse(q).length : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      try {
+        const q = localStorage.getItem('pms_sync_queue');
+        if (q) {
+          const queue = JSON.parse(q);
+          if (queue.length > 0) {
+            toast.success(isArabic ? `تمت مزامنة ${queue.length} سجل مع الخادم بنجاح` : `Successfully synced ${queue.length} pending records with server`);
+            localStorage.removeItem('pms_sync_queue');
+            setSyncQueueCount(0);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast.warning(isArabic ? 'انقطع الاتصال بالإنترنت - يتم حفظ التغييرات محلياً للمزامنة لاحقاً' : 'Connection lost - changes saved locally for later sync');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [isArabic]);
+
+  const addToSyncQueue = (recordId: string) => {
+    try {
+      const q = localStorage.getItem('pms_sync_queue');
+      const queue = q ? JSON.parse(q) : [];
+      if (!queue.includes(recordId)) {
+        queue.push(recordId);
+        localStorage.setItem('pms_sync_queue', JSON.stringify(queue));
+        setSyncQueueCount(queue.length);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleExportPdf = () => {
+    generateMonthlyReport(catalog, records, isArabic);
+    toast.success(isArabic ? 'تم تصدير تقرير PDF بنجاح' : 'PDF Report exported successfully');
+  };
 
   // Filter records by department when not 'All'
   const visibleRecords = activeDepartment === 'All'
     ? records
     : records.filter(r => r.department === activeDepartment || r.entity === 'wps' || r.entity === 'gate');
 
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string; email: string; role: 'Admin' | 'Supervisor' | 'Viewer'; department: string; lastActive: string }>({
+    id: 'u1',
+    name: 'Capt. Ahmed Al-Mansoori',
+    email: 'ahmed.m@pms11.offshore',
+    role: 'Admin',
+    department: 'Project Management',
+    lastActive: 'Just now'
+  });
+
   // Handlers
   const handleSaveRecord = (record: BaseRecord, secondRecord?: BaseRecord) => {
-    let updated = upsertRecord(record, 'Barge Master & Tech Lead');
+    let updated = upsertRecord(record, currentUser.name);
     if (secondRecord) {
-      updated = upsertRecord(secondRecord, 'Quality Superintendent');
+      updated = upsertRecord(secondRecord, currentUser.name);
     }
     setRecords(updated);
     setAuditLogs(getStoredAuditLogs());
+    if (!navigator.onLine) {
+      addToSyncQueue(record.id);
+      if (secondRecord) addToSyncQueue(secondRecord.id);
+      toast.info(isArabic ? 'تم الحفظ محلياً (غير متصل - سيتم المزامنة لاحقاً)' : 'Saved locally (Offline - queued for sync)');
+    }
   };
 
   const handleDeleteRecord = (id: string) => {
-    const updated = removeRecord(id, 'Admin');
+    if (currentUser.role !== 'Admin') {
+      toast.error(isArabic ? 'عذراً، صلاحيات الحذف وإزالة السجلات مقتصرة على المدير (Admin)' : 'Access denied: Deleting records is restricted to Admin role');
+      return;
+    }
+    const updated = removeRecord(id, currentUser.name);
     setRecords(updated);
     setAuditLogs(getStoredAuditLogs());
     setSelectedRecord(null);
+    if (!navigator.onLine) {
+      addToSyncQueue(id);
+      toast.info(isArabic ? 'تم الحذف محلياً (غير متصل)' : 'Deleted locally (Offline)');
+    }
   };
 
   const handleStatusChange = (id: string, newStatus: any) => {
@@ -174,6 +277,11 @@ export default function App() {
         onOpenExcelManager={() => setActiveTab('sheets')}
         onOpenSearch={() => setIsSearchOpen(true)}
         onExportExcel={() => exportWorkbook(records)}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
+        unreadNotificationsCount={unreadNotificationsCount}
+        onExportPdf={handleExportPdf}
+        isOnline={isOnline}
+        syncQueueCount={syncQueueCount}
       />
 
       <div className="flex flex-1">
@@ -209,9 +317,12 @@ export default function App() {
               auditLogs={auditLogs}
               catalog={catalog}
               isArabic={isArabic}
+              isOnline={isOnline}
+              syncQueueCount={syncQueueCount}
               onNavigate={setActiveTab}
               onOpenNewRecord={() => openNewRecordModal('task')}
               onOpenExcelManager={() => setActiveTab('sheets')}
+              onSaveRecord={handleSaveRecord}
             />
           )}
 
@@ -465,6 +576,33 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'smart_reports' && (
+            <SmartReportsView
+              records={records}
+              isArabic={isArabic}
+              onSelectRecord={setSelectedRecord}
+            />
+          )}
+
+          {activeTab === 'dependency_graph' && (
+            <DependencyGraphView
+              records={records}
+              isArabic={isArabic}
+              onSelectRecord={setSelectedRecord}
+            />
+          )}
+
+          {activeTab === 'admin_console' && (
+            <AdminConsoleView
+              currentUser={currentUser}
+              onSwitchUser={setCurrentUser}
+              records={records}
+              auditLogs={auditLogs}
+              isArabic={isArabic}
+              onResetSystemData={handleResetData}
+            />
+          )}
+
           {activeTab === 'responsibilities' && (
             <SheetBrowserView
               key="Responsibilities"
@@ -529,6 +667,15 @@ export default function App() {
         records={records}
         onSelectRecord={setSelectedRecord}
         isArabic={isArabic}
+      />
+
+      {/* Notification Center Modal */}
+      <NotificationCenterModal
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        records={records}
+        isArabic={isArabic}
+        onSelectRecord={setSelectedRecord}
       />
     </div>
   );

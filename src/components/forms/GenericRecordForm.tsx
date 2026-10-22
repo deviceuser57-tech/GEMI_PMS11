@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BaseRecord, EntityType, Department, RecordStatus } from '../../types/pms';
-import { Layers, CheckCircle } from 'lucide-react';
+import { Layers, CheckCircle, Mic, MicOff } from 'lucide-react';
 
 interface GenericRecordFormProps {
   initialRecord?: BaseRecord;
@@ -30,6 +30,40 @@ export const GenericRecordForm: React.FC<GenericRecordFormProps> = ({
   const [dueDate, setDueDate] = useState(initialRecord?.due_date || '');
   const [currency, setCurrency] = useState(initialRecord?.data?.currency || 'USD');
   const [costAmount, setCostAmount] = useState(initialRecord?.data?.cost_amount || 0);
+  const [isListening, setIsListening] = useState(false);
+
+  const handleVoiceDictation = () => {
+    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) {
+      alert(isArabic ? 'متصفحك لا يدعم خاصية التعرف على الصوتي (SpeechRecognition).' : 'SpeechRecognition is not supported in your browser.');
+      return;
+    }
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = isArabic ? 'ar-SA' : 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: any) => {
+      const speechToText = event.results[0][0].transcript;
+      setDescription(prev => (prev ? prev + ' ' + speechToText : speechToText));
+      setIsListening(false);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,9 +159,23 @@ export const GenericRecordForm: React.FC<GenericRecordFormProps> = ({
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-slate-300 mb-1">
-            {isArabic ? 'الوصف والتفاصيل الهندسية' : 'Description & Scope'}
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs font-medium text-slate-300">
+              {isArabic ? 'الوصف والتفاصيل الهندسية' : 'Description & Scope'}
+            </label>
+            <button
+              type="button"
+              onClick={handleVoiceDictation}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                isListening
+                  ? 'bg-rose-600 text-white animate-pulse'
+                  : 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+              }`}
+            >
+              {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+              <span>{isListening ? (isArabic ? 'جاري الاستماع...' : 'Listening...') : (isArabic ? 'إملاء صوتي' : 'Voice Dictate')}</span>
+            </button>
+          </div>
           <textarea
             rows={2}
             value={description}

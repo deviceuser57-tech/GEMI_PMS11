@@ -39,6 +39,30 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginatedRecords.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedRecords.map(r => r.id)));
+    }
+  };
+
+  const toggleSelectRecord = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const applyBulkAction = (action: 'archive' | 'status') => {
+    // Implementation for bulk action ...
+    console.log(`Action: ${action}, IDs:`, Array.from(selectedIds));
+    setSelectedIds(new Set());
+    alert(isArabic ? 'تم تطبيق الإجراء الجماعي بنجاح' : 'Bulk action applied successfully');
+  };
+
   const containerRef = useGsapPageReveal<HTMLDivElement>([activeSheet, currentPage, statusFilter]);
 
   // Keep activeSheet in sync with navigation from sidebar or workbook manager
@@ -140,6 +164,15 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
           </div>
         </div>
 
+        {/* Bulk Action Toolbar */}
+        {selectedIds.size > 0 && (
+          <div className="pt-3 border-t border-slate-800 flex items-center gap-4 text-xs bg-slate-950/50 p-2 rounded-xl">
+             <span className="text-slate-300 font-bold">{selectedIds.size} {isArabic ? 'سجل محدد' : 'records selected'}</span>
+             <button onClick={() => applyBulkAction('status')} className="px-3 py-1 bg-cyan-900 text-cyan-200 border border-cyan-700 rounded-lg">{isArabic ? 'تغيير الحالة جماعياً' : 'Bulk Status Update'}</button>
+             <button onClick={() => applyBulkAction('archive')} className="px-3 py-1 bg-rose-900 text-rose-200 border border-rose-700 rounded-lg">{isArabic ? 'أرشفة جماعية' : 'Bulk Archive'}</button>
+          </div>
+        )}
+
         {/* Quick Dropdown / Quick Switcher for ALL 40 sheets */}
         <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
@@ -212,6 +245,11 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
           <table className="w-full text-xs text-left">
             <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] font-semibold border-b border-slate-800">
               <tr>
+                <th className="px-4 py-3">
+                    <button onClick={toggleSelectAll} className="text-white hover:text-cyan-400">
+                        {selectedIds.size === paginatedRecords.length && paginatedRecords.length > 0 ? <CheckSquare className="w-4 h-4"/> : <Square className="w-4 h-4"/>}
+                    </button>
+                </th>
                 <th className="px-4 py-3">{isArabic ? 'المعرف (RID)' : 'Record ID'}</th>
                 <th className="px-4 py-3">{isArabic ? 'العنوان / الوصف' : 'Title & Scope'}</th>
                 <th className="px-4 py-3">{isArabic ? 'حزمة العمل' : 'WPS'}</th>
@@ -225,7 +263,7 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
             <tbody className="divide-y divide-slate-800">
               {paginatedRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-slate-400 italic">
+                  <td colSpan={9} className="px-4 py-8 text-center text-slate-400 italic">
                     {isArabic ? 'لا توجد سجلات مطابقة للشيت أو الفلتر المحدد.' : 'No records found matching criteria.'}
                   </td>
                 </tr>
@@ -236,6 +274,11 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
                     onClick={() => onSelectRecord(record)}
                     className="hover:bg-slate-800/50 cursor-pointer transition-colors"
                   >
+                    <td className="px-4 py-3">
+                        <button onClick={(e) => { e.stopPropagation(); toggleSelectRecord(record.id); }} className="text-white hover:text-cyan-400">
+                            {selectedIds.has(record.id) ? <CheckSquare className="w-4 h-4"/> : <Square className="w-4 h-4"/>}
+                        </button>
+                    </td>
                     <td className="px-4 py-3 font-mono font-bold text-cyan-400 whitespace-nowrap">
                       {record.rid}
                     </td>

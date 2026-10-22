@@ -18,6 +18,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   isArabic
 }) => {
   const [query, setQuery] = useState('');
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('pms_recent_searches');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -38,22 +46,35 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   const results = query.trim()
     ? records.filter(r => {
         const q = query.toLowerCase();
-        return (
-          r.rid.toLowerCase().includes(q) ||
-          r.title.toLowerCase().includes(q) ||
-          (r.description && r.description.toLowerCase().includes(q)) ||
-          r.department.toLowerCase().includes(q) ||
-          r.entity.toLowerCase().includes(q) ||
-          (r.data?.certificate_number && r.data.certificate_number.toLowerCase().includes(q)) ||
-          (r.data?.full_name && r.data.full_name.toLowerCase().includes(q))
-        );
+        const content = [
+          r.rid,
+          r.title,
+          r.description || '',
+          r.department,
+          r.entity,
+          r.data?.certificate_number || '',
+          r.data?.full_name || ''
+        ].join(' ').toLowerCase();
+        
+        // Simple fuzzy match: all query words must be present in content
+        const queryWords = q.split(' ');
+        return queryWords.every(word => content.includes(word));
       }).slice(0, 15)
     : [];
+
+  const handleSelect = (record: BaseRecord) => {
+    if (query.trim() && !recentSearches.includes(query.trim())) {
+      const newRecent = [query.trim(), ...recentSearches].slice(0, 5);
+      setRecentSearches(newRecent);
+      localStorage.setItem('pms_recent_searches', JSON.stringify(newRecent));
+    }
+    onSelectRecord(record);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl space-y-2">
-        {/* Search Input Bar */}
         <div className="p-3.5 border-b border-slate-800 flex items-center gap-3">
           <Search className="w-5 h-5 text-cyan-400 shrink-0" />
           <input
@@ -63,8 +84,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
             onChange={e => setQuery(e.target.value)}
             placeholder={
               isArabic
-                ? 'ابحث برمز السجل (T-01, R-048, CRW-01)، اسم الشخص، رقم الشهادة، أو الموضوع...'
-                : 'Search by RID (e.g. ROLE-01, R-048, GAP-001), crew name, cert number...'
+                ? 'ابحث بالوصف، المعرف، أو البيانات...'
+                : 'Search by description, RID, title, or metadata...'
             }
             className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
           />
@@ -73,13 +94,30 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
           </button>
         </div>
 
-        {/* Results List */}
         <div className="max-h-96 overflow-y-auto custom-scrollbar p-2 space-y-1">
           {query.trim() === '' ? (
-            <div className="p-6 text-center text-xs text-slate-500">
-              {isArabic
-                ? 'اكتب للبحث الفوري في الـ 40 شيت عمل، القواعد الـ 89، والطواقم، والاعتماديات...'
-                : 'Type to search across 40 sheets, 89 rules, crew certifications, and precedence links...'}
+            <div className="p-2">
+              {recentSearches.length > 0 && (
+                <div className="mb-2">
+                  <p className="text-[10px] uppercase text-slate-500 font-bold px-3 mb-1">
+                    {isArabic ? 'عمليات البحث الأخيرة' : 'Recent Searches'}
+                  </p>
+                  {recentSearches.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setQuery(s)}
+                      className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 rounded-lg"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="p-4 text-center text-xs text-slate-500">
+                {isArabic
+                  ? 'اكتب للبحث الفوري في الـ 40 شيت عمل، القواعد الـ 89، والطواقم...'
+                  : 'Type to search across 40 sheets, 89 rules, crew certifications, and metadata...'}
+              </div>
             </div>
           ) : results.length === 0 ? (
             <div className="p-6 text-center text-xs text-slate-500">
@@ -89,10 +127,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
             results.map(record => (
               <div
                 key={record.id}
-                onClick={() => {
-                  onSelectRecord(record);
-                  onClose();
-                }}
+                onClick={() => handleSelect(record)}
                 className="p-3 rounded-xl bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800/80 hover:border-cyan-500/40 flex items-center justify-between cursor-pointer transition-colors text-xs"
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -101,8 +136,11 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                   </span>
                   <div className="min-w-0">
                     <p className="font-semibold text-slate-200 truncate">{record.title}</p>
-                    <p className="text-[10px] text-slate-400">
-                      {record.entity} • {record.department} {record.wps_id ? `• [${record.wps_id}]` : ''}
+                    <p className="text-[10px] text-slate-400 truncate">
+                      {record.description || ''}
+                    </p>
+                    <p className="text-[10px] text-slate-500">
+                      {record.entity} • {record.department}
                     </p>
                   </div>
                 </div>
@@ -118,7 +156,6 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
           )}
         </div>
 
-        {/* Search Footer */}
         <div className="p-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-500 px-4">
           <span>{isArabic ? 'اضغط ESC للإغلاق' : 'Press ESC to close'}</span>
           <span>PMS-11 Global Index</span>

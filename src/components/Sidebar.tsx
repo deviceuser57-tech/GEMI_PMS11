@@ -22,7 +22,9 @@ import {
   UserCheck,
   FileCode,
   GitCommit,
-  Shield
+  Shield,
+  Layers,
+  Calendar
 } from 'lucide-react';
 
 export type ActiveTab =
@@ -52,6 +54,8 @@ export type ActiveTab =
   | 'gantt'
   | 'smart_reports'
   | 'dependency_graph'
+  | 'wps_complexity'
+  | 'calendar'
   | 'admin_console';
 
 interface SidebarProps {
@@ -124,6 +128,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
           icon: GitBranch,
           badge: 'D3',
           badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+        },
+        {
+          id: 'wps_complexity' as ActiveTab,
+          label: isArabic ? 'مصفوفة تعقيد حزم العمل' : 'WPS Complexity Matrix',
+          sub: isArabic ? 'تحليل الموارد والمخاطر لكل WPS' : 'Resource & Risk Complexity Analysis',
+          icon: Layers,
+          badge: 'Matrix',
+          badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+        },
+        {
+          id: 'calendar' as ActiveTab,
+          label: isArabic ? 'التقويم التشغيلي' : 'Operational Calendar',
+          sub: isArabic ? 'جدول المهام ومواعيد الاستحقاق' : 'Due Dates & Maintenance',
+          icon: Calendar,
+          badge: 'Date',
+          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40'
         },
         {
           id: 'admin_console' as ActiveTab,

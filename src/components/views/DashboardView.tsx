@@ -162,11 +162,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 : 'Real-time multi-dimensional tracking of 40 worksheets, 24 WPS closure loops, Crew competence, Helideck CAP 437, Accommodation MLC 2006, and visual analytics.'}
             </p>
             <div className="mt-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-               <p className="text-sm font-medium text-white">
+               <p className="text-sm font-medium text-white mb-2">
                  {isArabic 
                    ? `حالة الإغلاق الحالية: تم إنجاز ${metrics.wpsCompliantCount} من أصل ${metrics.totalWps} حزمة عمل، مع وجود ${metrics.openGapsCount} فجوة مفتوحة.`
                    : `Current Closure Status: ${metrics.wpsCompliantCount} of ${metrics.totalWps} Work Packages closed, with ${metrics.openGapsCount} open findings.`}
                </p>
+               <div className="text-xs text-slate-300 bg-slate-900/50 p-2 rounded-lg border border-slate-700">
+                 {isArabic ? 'متوسط وقت الإغلاق (MTTC):' : 'Mean Time to Close (MTTC):'} 
+                 <span className="text-cyan-400 font-bold ml-1">
+                   {Math.round(records.filter(r => r.status === 'Closed').reduce((acc, r) => {
+                     const createdAt = new Date(r.created_at).getTime();
+                     const updatedAt = new Date(r.updated_at).getTime();
+                     return acc + (updatedAt - createdAt) / (1000 * 60 * 60 * 24);
+                   }, 0) / (records.filter(r => r.status === 'Closed').length || 1))} {isArabic ? 'يوم' : 'days'}
+                 </span>
+               </div>
             </div>
           </div>
 
@@ -215,6 +225,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         >
           <BarChart3 className="w-4 h-4 text-emerald-400" />
           <span>{isArabic ? '📈 التحليل البياني للجاهزية (Recharts Analytics)' : '📈 Readiness Charts (Recharts)'}</span>
+        </button>
+
+        <button
+          onClick={() => setDashboardTab('performance')}
+          className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all ${
+            dashboardTab === 'performance'
+              ? 'bg-gradient-to-r from-teal-950 to-emerald-950 text-teal-300 border border-teal-500/40 shadow-sm'
+              : 'text-slate-400 hover:text-white bg-slate-900 border border-slate-800'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4 text-teal-400" />
+          <span>{isArabic ? '👥 أداء الفرق (Team Performance)' : 'Team Performance'}</span>
         </button>
 
         <button
@@ -843,7 +865,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             </div>
 
-            {/* Department Compliance Rates */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl gsap-card">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-sm text-white flex items-center gap-2">
@@ -876,7 +897,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      )}
 
-    </div>
+      {dashboardTab === 'performance' && (
+        <div className="space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+             <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
+               <TrendingUp className="w-5 h-5 text-teal-400" />
+               {isArabic ? 'أداء الأقسام والفرق (Team & Department Performance)' : 'Team & Department Performance'}
+             </h2>
+             <div className="h-[400px] w-full">
+               <ResponsiveContainer width="100%" height="100%">
+                 <BarChart data={metrics.departmentBreakdown} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                   <XAxis dataKey="department" stroke="#94a3b8" fontSize={12} interval={0} angle={-20} textAnchor="end" />
+                   <YAxis stroke="#94a3b8" fontSize={12} domain={[0, 100]} />
+                   <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
+                   <Legend />
+                   <Bar dataKey="complianceRate" fill="#0d9488" name={isArabic ? 'معدل الإنجاز' : 'Completion Rate'} />
+                 </BarChart>
+               </ResponsiveContainer>
+             </div>
+          </div>
+        </div>
   );
 };

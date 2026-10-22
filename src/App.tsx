@@ -36,6 +36,8 @@ import { GanttTimelineView } from './components/views/GanttTimelineView';
 import { SmartReportsView } from './components/views/SmartReportsView';
 import { DependencyGraphView } from './components/views/DependencyGraphView';
 import { AdminConsoleView } from './components/views/AdminConsoleView';
+import { ComplexityMatrixView } from './components/views/ComplexityMatrixView';
+import { CalendarView } from './components/views/CalendarView';
 import { NewRecordModal } from './components/modals/NewRecordModal';
 import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
@@ -586,6 +588,21 @@ export default function App() {
 
           {activeTab === 'dependency_graph' && (
             <DependencyGraphView
+              records={records}
+              isArabic={isArabic}
+              onSelectRecord={setSelectedRecord}
+            />
+          )}
+
+          {activeTab === 'wps_complexity' && (
+            <ComplexityMatrixView
+              records={records}
+              isArabic={isArabic}
+            />
+          )}
+
+          {activeTab === 'calendar' && (
+            <CalendarView
               records={records}
               isArabic={isArabic}
               onSelectRecord={setSelectedRecord}

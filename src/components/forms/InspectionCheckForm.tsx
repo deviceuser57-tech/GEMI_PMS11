@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BaseRecord, InspectionCheckData, Department } from '../../types/pms';
-import { CheckCircle, AlertTriangle, ClipboardCheck, ShieldAlert, FileText } from 'lucide-react';
+import { CheckCircle, AlertTriangle, ClipboardCheck, ShieldAlert, FileText, Printer } from 'lucide-react';
 
 interface InspectionCheckFormProps {
   initialRecord?: BaseRecord;
@@ -138,8 +138,8 @@ export const InspectionCheckForm: React.FC<InspectionCheckFormProps> = ({
             </h3>
             <p className="text-xs text-slate-400">
               {isArabic
-                ? 'فحوصات CAP 437 للمهبط (WPS-19) أو معايير MLC 2006 للإقامة (WPS-15)'
-                : 'Helideck CAP 437 (WPS-19) or Accommodation MLC 2006 (WPS-15) inspection check'}
+                ? 'فحوصات ECAR 138 للمهبط (WPS-19 / سلطة الطيران ECAA) أو معايير MLC 2006 للإقامة (WPS-15)'
+                : 'Helideck ECAR 138 (WPS-19 ECAA) or Accommodation MLC 2006 (WPS-15) inspection check'}
             </p>
           </div>
         </div>
@@ -166,7 +166,7 @@ export const InspectionCheckForm: React.FC<InspectionCheckFormProps> = ({
                   : 'bg-slate-900 border-slate-700 text-slate-400'
               }`}
             >
-              🚁 {isArabic ? 'مهبط الطائرات (WPS-19)' : 'Helideck (WPS-19)'}
+              🚁 {isArabic ? 'مهبط الطائرات (WPS-19 ECAR 138)' : 'Helideck (WPS-19 ECAR 138)'}
             </button>
             <button
               type="button"
@@ -196,7 +196,7 @@ export const InspectionCheckForm: React.FC<InspectionCheckFormProps> = ({
           >
             {facilityArea === 'Helideck' ? (
               <>
-                <option value="R-048">R-048: Helideck Friction & Physical Nets (CAP 437)</option>
+                <option value="R-048">R-048: Helideck Friction & Physical Nets (ECAR 138 / ECAA)</option>
                 <option value="R-049">R-049: DIFFS Foam Fire Fighting System Discharge</option>
                 <option value="R-050">R-050: Helideck Lighting & Obstacle Marking</option>
                 <option value="R-051">R-051: Aviation Refueling & Grounding Integrity</option>
@@ -377,21 +377,32 @@ export const InspectionCheckForm: React.FC<InspectionCheckFormProps> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+      <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-800 no-print">
         <button
           type="button"
-          onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium"
+          onClick={() => window.print()}
+          className="px-4 py-2 rounded-lg border border-amber-800/80 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60 text-xs font-bold flex items-center gap-1.5 transition-colors"
         >
-          {isArabic ? 'إلغاء' : 'Cancel'}
+          <Printer className="w-4 h-4 text-amber-400" />
+          <span>{isArabic ? 'طباعة النموذج' : 'Print Form'}</span>
         </button>
-        <button
-          type="submit"
-          className="px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs shadow-md shadow-amber-600/20 flex items-center gap-1.5"
-        >
-          <CheckCircle className="w-4 h-4" />
-          {isArabic ? 'حفظ نتيجة الفحص والتفتيش' : 'Save Inspection Check'}
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium"
+          >
+            {isArabic ? 'إلغاء' : 'Cancel'}
+          </button>
+          <button
+            type="submit"
+            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
+          >
+            <CheckCircle className="w-4 h-4" />
+            <span>{isArabic ? 'حفظ نتيجة الفحص والتفتيش' : 'Save Inspection Check'}</span>
+          </button>
+        </div>
       </div>
     </form>
   );

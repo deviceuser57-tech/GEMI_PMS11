@@ -24,7 +24,11 @@ import {
   GitCommit,
   Shield,
   Layers,
-  Calendar
+  Calendar,
+  MapPin,
+  QrCode,
+  Sparkles,
+  MessageSquare
 } from 'lucide-react';
 
 export type ActiveTab =
@@ -56,6 +60,11 @@ export type ActiveTab =
   | 'dependency_graph'
   | 'wps_complexity'
   | 'calendar'
+  | 'deck_plan'
+  | 'wps_mindmap'
+  | 'communication_hub'
+  | 'orchestration'
+  | 'document_repository'
   | 'admin_console';
 
 interface SidebarProps {
@@ -98,6 +107,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: isArabic ? 'حزم العمل (24 WPS)' : 'Work Packages (24 WPS)',
           sub: isArabic ? 'WPS-01 إلى WPS-24' : '24 Work Packages & Deep Tabs',
           icon: Boxes,
+        },
+        {
+          id: 'wps_mindmap' as ActiveTab,
+          label: isArabic ? 'الخريطة الذهنية لـ WPS' : 'WPS Connected Mindmap',
+          sub: isArabic ? 'تتبع شجري متصل للبوابات والأدلة' : 'Connected Pipeline Mindmap Tree',
+          icon: GitBranch,
+          badge: 'Mindmap',
+          badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
         },
         {
           id: 'gates' as ActiveTab,
@@ -146,6 +163,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
           badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40'
         },
         {
+          id: 'deck_plan' as ActiveTab,
+          label: isArabic ? 'مخطط سطح البارجة' : 'Deck-Plan Map View',
+          sub: isArabic ? 'الإسقاط المكاني ودبابيس الخريطة' : 'SVG Spatial Pinning & Asset Tags',
+          icon: MapPin,
+          badge: 'SVG Map',
+          badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+        },
+        {
+          id: 'orchestration' as ActiveTab,
+          label: isArabic ? 'منظومة الأوركسترا والاستشارات' : 'Multi-Agent Orchestrator',
+          sub: isArabic ? 'استشارة الكيانات الخمسة لإغلاق المهام' : 'Virtual Entities Consultation Engine',
+          icon: Sparkles,
+          badge: 'AI Engine',
+          badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+        },
+        {
+          id: 'communication_hub' as ActiveTab,
+          label: isArabic ? 'مركز الاتصالات والرسائل' : 'Communication & Entity Bridge',
+          sub: isArabic ? 'ربط المستخدم بالإدارة والأطراف' : 'Live Messaging & Entity Escalation',
+          icon: MessageSquare,
+          badge: 'Bridge',
+          badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+        },
+        {
+          id: 'document_repository' as ActiveTab,
+          label: isArabic ? 'مستودع الوثائق والمعايير' : 'Document Repository',
+          sub: isArabic ? 'المعايير التشريعية وكتيبات البارجة' : 'Offshore Standards & PMS-11 Manuals',
+          icon: BookOpen,
+          badge: 'Docs',
+          badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+        },
+        {
           id: 'admin_console' as ActiveTab,
           label: isArabic ? 'وحدة التحكم الإدارية (Admin)' : 'Admin Console & RBAC',
           sub: isArabic ? 'إدارة المستخدمين والصلاحيات' : 'User Roles & System Governance',
@@ -168,8 +217,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         },
         {
           id: 'helideck' as ActiveTab,
-          label: isArabic ? 'مهبط الطائرات (WPS-19)' : 'Helideck (CAP 437)',
-          sub: isArabic ? 'الملف الفني و 10 فحوصات دورية' : 'Technical Profile & 10 Checks',
+          label: isArabic ? 'مهبط الطائرات (WPS-19 ECAR 138)' : 'Helideck (ECAR 138)',
+          sub: isArabic ? 'سلطة الطيران المدني المصري ECAA' : 'Egyptian Civil Aviation ECAR 138',
           icon: Plane,
         },
         {
@@ -302,27 +351,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     key={item.id}
                     onClick={() => onSelectTab(item.id)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left nav-item-3d group ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left nav-item-3d group transition-all ${
                       isActive
-                        ? 'bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-slate-900 text-white border border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.25)]'
-                        : 'text-slate-300 hover:bg-slate-800/80 hover:text-white border border-slate-800/60'
+                        ? 'bg-[#ff6600] text-white font-bold border border-orange-400 shadow-lg shadow-orange-500/30'
+                        : 'text-slate-300 hover:bg-[#0f2942] hover:text-white border border-slate-800/80'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
                         className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                           isActive
-                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                            : 'bg-slate-800/70 text-slate-400 group-hover:text-slate-200 group-hover:bg-slate-800'
+                            ? 'bg-white/20 text-white border border-white/30'
+                            : 'bg-slate-800/80 text-orange-400 group-hover:text-orange-300 group-hover:bg-slate-800'
                         }`}
                       >
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0 text-left">
-                        <p className={`text-xs font-semibold truncate ${isActive ? 'text-cyan-200' : 'text-slate-200'}`}>
+                        <p className={`text-xs font-semibold truncate ${isActive ? 'text-white font-bold' : 'text-slate-200'}`}>
                           {item.label}
                         </p>
-                        <p className="text-[10px] text-slate-400 truncate">
+                        <p className={`text-[10px] truncate ${isActive ? 'text-orange-100' : 'text-slate-400'}`}>
                           {item.sub}
                         </p>
                       </div>

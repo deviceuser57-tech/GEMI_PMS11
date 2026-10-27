@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BaseRecord } from '../../types/pms';
-import { X, Trash2, Edit3, ShieldCheck, Calendar, User, FileText, Layers, Tag } from 'lucide-react';
+import { X, Trash2, Edit3, ShieldCheck, Calendar, User, FileText, Layers, Tag, QrCode, Printer, CheckCircle, Save } from 'lucide-react';
+import { printRecordDetails } from '../../lib/printUtils';
 
 interface RecordDetailModalProps {
   record: BaseRecord | null;
@@ -8,6 +9,7 @@ interface RecordDetailModalProps {
   onEdit: (record: BaseRecord) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, newStatus: any) => void;
+  onShowQrModal?: (record: BaseRecord) => void;
   isArabic: boolean;
 }
 
@@ -17,16 +19,34 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
   onEdit,
   onDelete,
   onStatusChange,
+  onShowQrModal,
   isArabic
 }) => {
   if (!record) return null;
 
+  const [currentStatus, setCurrentStatus] = useState(record.status);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handlePrint = () => {
+    try {
+      window.print();
+    } catch {
+      printRecordDetails(record, isArabic);
+    }
+  };
+
+  const handleQuickSave = () => {
+    onStatusChange(record.id, currentStatus);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2500);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl flex flex-col">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl flex flex-col printable-area">
         {/* Modal Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900/95 backdrop-blur z-10">
-          <div className="flex items-center gap-2.5">
+        <div className="p-5 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900/95 backdrop-blur z-10 no-print">
+          <div className="flex items-center gap-2">
             <span className="font-mono text-xs font-extrabold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
               {record.rid}
             </span>
@@ -36,6 +56,31 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              className="p-1.5 rounded-lg bg-amber-950 hover:bg-amber-900 text-amber-300 border border-amber-800 transition-colors flex items-center gap-1.5 text-xs font-bold"
+              title={isArabic ? 'طباعة النموذج والمعاينة' : 'Print Modal Content'}
+            >
+              <Printer className="w-4 h-4" />
+              <span>{isArabic ? 'طباعة' : 'Print'}</span>
+            </button>
+            <button
+              onClick={handleQuickSave}
+              className="p-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 transition-colors flex items-center gap-1.5 text-xs font-bold"
+              title={isArabic ? 'حفظ التغييرات' : 'Save Changes'}
+            >
+              <Save className="w-4 h-4" />
+              <span>{isArabic ? 'حفظ' : 'Save'}</span>
+            </button>
+            {onShowQrModal && (
+              <button
+                onClick={() => onShowQrModal(record)}
+                className="p-1.5 rounded-lg bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 transition-colors"
+                title={isArabic ? 'استخراج بطاقة رمز الاستجابة السريعة QR' : 'Generate Rig Asset QR Code Tag'}
+              >
+                <QrCode className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => onEdit(record)}
               className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 transition-colors"
@@ -67,7 +112,12 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
         {/* Modal Body */}
         <div className="p-6 space-y-5 text-xs">
           <div>
-            <h3 className="text-base font-bold text-white">{record.title}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-white">{record.title}</h3>
+              <span className="font-mono text-xs font-bold text-cyan-400 border border-cyan-800 px-2 py-0.5 rounded bg-cyan-950">
+                {record.rid}
+              </span>
+            </div>
             {record.description && (
               <p className="text-slate-300 mt-1 leading-relaxed">{record.description}</p>
             )}
@@ -80,8 +130,17 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
               <span className="font-mono text-cyan-300 font-bold">{record.wps_id || 'Global'}</span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-500 block mb-0.5">{isArabic ? 'القسم المسؤول' : 'Department'}</span>
-              <span className="font-semibold text-slate-200">{record.department}</span>
+              <span className="text-[10px] text-slate-500 block mb-0.5">{isArabic ? 'الإدارة الرئيسية' : 'Primary Department'}</span>
+              <span className="font-semibold text-cyan-300">{record.department}</span>
+              {record.assisting_departments && record.assisting_departments.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {record.assisting_departments.map(d => (
+                    <span key={d} className="px-1 py-0.2 text-[9px] rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
+                      +{d}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <span className="text-[10px] text-slate-500 block mb-0.5">{isArabic ? 'المسؤول المباشر' : 'Owner'}</span>
@@ -98,8 +157,11 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
             <div>
               <span className="text-[10px] text-slate-500 block mb-0.5">{isArabic ? 'الحالة التشغيلية' : 'Status'}</span>
               <select
-                value={record.status}
-                onChange={e => onStatusChange(record.id, e.target.value)}
+                value={currentStatus}
+                onChange={e => {
+                  setCurrentStatus(e.target.value as any);
+                  onStatusChange(record.id, e.target.value);
+                }}
                 className="bg-slate-900 border border-slate-700 rounded px-2 py-0.5 text-xs text-cyan-300 font-bold"
               >
                 <option value="OPEN">OPEN / مفتوحة</option>
@@ -161,8 +223,9 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
             <span>Created: {new Date(record.created_at).toLocaleString()}</span>
             <span>Updated: {new Date(record.updated_at).toLocaleString()}</span>
           </div>
+
           {/* Attachments Section */}
-          <div className="pt-4 border-t border-slate-800">
+          <div className="pt-4 border-t border-slate-800 no-print">
             <h4 className="text-sm font-bold text-slate-300 mb-2 flex items-center gap-2">
               <FileText className="w-4 h-4 text-cyan-500" />
               {isArabic ? 'المرفقات (صور/وثائق)' : 'Attachments (Images/Docs)'}
@@ -183,7 +246,6 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
                 className="hidden" 
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
-                     // In real app, convert to base64 or upload to server. Here we just add a placeholder
                      alert(isArabic ? 'تم محاكاة رفع الملف' : 'Mock file upload: ' + e.target.files[0].name);
                      onEdit({ ...record, attachments: [...(record.attachments || []), 'new_attachment'] });
                   }
@@ -192,8 +254,43 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
               {isArabic ? 'رفع مرفق جديد' : 'Upload Attachment'}
             </label>
           </div>
+
+          {/* Footer Action Bar with prominent Save & Print */}
+          <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3 no-print">
+            {saveSuccess ? (
+              <span className="text-emerald-400 font-bold text-xs flex items-center gap-1.5 animate-pulse">
+                <CheckCircle className="w-4 h-4" />
+                {isArabic ? 'تم حفظ التعديلات والحالة بنجاح!' : 'Record changes saved successfully!'}
+              </span>
+            ) : (
+              <span className="text-slate-500 text-[11px]">
+                {isArabic ? 'يمكنك طباعة هذا النموذج أو حفظ التعديلات.' : 'Print or save current record details.'}
+              </span>
+            )}
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/80 text-xs font-bold transition-all flex items-center gap-1.5"
+              >
+                <Printer className="w-4 h-4 text-amber-400" />
+                <span>{isArabic ? 'طباعة النموذج' : 'Print Form'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleQuickSave}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-600/30 flex items-center gap-1.5"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isArabic ? 'حفظ النموذج' : 'Save Record'}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+

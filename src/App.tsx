@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 import { Reminder, BaseRecord, Department, EntityType } from './types/pms';
-import { FileSpreadsheet, Layers } from 'lucide-react';
+import { FileSpreadsheet, Layers, ShieldAlert, Building2, UserCheck, Eye } from 'lucide-react';
 import {
   getStoredRecords,
   getStoredAuditLogs,
@@ -17,6 +17,10 @@ import {
 import { exportWorkbook } from './lib/excelParser';
 import { Header } from './components/Header';
 import { Sidebar, ActiveTab } from './components/Sidebar';
+import { UserProfileModal } from './components/modals/UserProfileModal';
+import { SyncQueueModal } from './components/modals/SyncQueueModal';
+import { getStoredUserProfile, saveUserProfile, filterRecordsForUser, UserProfile } from './lib/rbac';
+import { SyncQueueItem, getStoredSyncQueue, addSyncQueueItem, clearSyncQueue } from './lib/syncQueue';
 import { DashboardView } from './components/views/DashboardView';
 import { WpsView } from './components/views/WpsView';
 import { CrewHubView } from './components/views/CrewHubView';
@@ -38,15 +42,25 @@ import { DependencyGraphView } from './components/views/DependencyGraphView';
 import { AdminConsoleView } from './components/views/AdminConsoleView';
 import { ComplexityMatrixView } from './components/views/ComplexityMatrixView';
 import { CalendarView } from './components/views/CalendarView';
+import { DeckPlanView } from './components/views/DeckPlanView';
+import { CommunicationHubView } from './components/views/CommunicationHubView';
+import { OrchestrationView } from './components/views/OrchestrationView';
+import { DocumentRepositoryView } from './components/views/DocumentRepositoryView';
+import { WpsMindmapView } from './components/views/WpsMindmapView';
+import { getStoredMessages, saveMessages } from './lib/orchestratorEngine';
+import { ChatMessage } from './types/pms';
 import { NewRecordModal } from './components/modals/NewRecordModal';
 import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
+import { QRCodeModal } from './components/modals/QRCodeModal';
+import { QRScannerModal } from './components/modals/QRScannerModal';
 import { generateMonthlyReport, generateAuditLogsReport } from './lib/pdfGenerator';
 
 export default function App() {
   const [records, setRecords] = useState<BaseRecord[]>(getStoredRecords);
   const [auditLogs, setAuditLogs] = useState(getStoredAuditLogs);
   const [catalog] = useState(getStoredCatalog);
+  const [messages, setMessages] = useState<ChatMessage[]>(getStoredMessages);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [selectedSheetForBrowser, setSelectedSheetForBrowser] = useState<string>('WPS');
@@ -62,6 +76,39 @@ export default function App() {
 
   const [selectedRecord, setSelectedRecord] = useState<BaseRecord | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [qrModalRecord, setQrModalRecord] = useState<BaseRecord | null>(null);
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState<boolean>(false);
+
+  // Check URL query parameters for direct QR deep linking (?recordId=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const recId = params.get('recordId');
+    if (recId) {
+      const found = records.find(r => r.rid.toUpperCase() === recId.toUpperCase() || r.id === recId);
+      if (found) {
+        setSelectedRecord(found);
+      }
+    }
+  }, [records]);
+
+  // Message Handlers
+  const handleSendMessage = (msgData: Omit<ChatMessage, 'id' | 'timestamp' | 'is_read'>) => {
+    const newMsg: ChatMessage = {
+      ...msgData,
+      id: `MSG-${Date.now().toString().slice(-5)}`,
+      timestamp: new Date().toISOString(),
+      is_read: false
+    };
+    const updated = [newMsg, ...messages];
+    setMessages(updated);
+    saveMessages(updated);
+  };
+
+  const handleMarkMessageRead = (id: string) => {
+    const updated = messages.map(m => m.id === id ? { ...m, is_read: true } : m);
+    setMessages(updated);
+    saveMessages(updated);
+  };
 
   // Sync RTL / LTR
   useEffect(() => {
@@ -107,30 +154,18 @@ export default function App() {
   }).length;
 
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
-  const [syncQueueCount, setSyncQueueCount] = useState<number>(() => {
-    try {
-      const q = localStorage.getItem('pms_sync_queue');
-      return q ? JSON.parse(q).length : 0;
-    } catch {
-      return 0;
-    }
-  });
+  const [syncQueue, setSyncQueue] = useState<SyncQueueItem[]>(getStoredSyncQueue);
+  const [isSyncQueueOpen, setIsSyncQueueOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      try {
-        const q = localStorage.getItem('pms_sync_queue');
-        if (q) {
-          const queue = JSON.parse(q);
-          if (queue.length > 0) {
-            toast.success(isArabic ? `تمت مزامنة ${queue.length} سجل مع الخادم بنجاح` : `Successfully synced ${queue.length} pending records with server`);
-            localStorage.removeItem('pms_sync_queue');
-            setSyncQueueCount(0);
-          }
-        }
-      } catch (e) {
-        console.error(e);
+      if (syncQueue.length > 0) {
+        toast.info(
+          isArabic
+            ? `استعادة الاتصال بالإنترنت! توجد ${syncQueue.length} عملية بانتظار المزامنة`
+            : `Internet connection restored! ${syncQueue.length} pending operations in queue`
+        );
       }
     };
     const handleOffline = () => {
@@ -144,20 +179,21 @@ export default function App() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [isArabic]);
+  }, [isArabic, syncQueue.length]);
 
-  const addToSyncQueue = (recordId: string) => {
-    try {
-      const q = localStorage.getItem('pms_sync_queue');
-      const queue = q ? JSON.parse(q) : [];
-      if (!queue.includes(recordId)) {
-        queue.push(recordId);
-        localStorage.setItem('pms_sync_queue', JSON.stringify(queue));
-        setSyncQueueCount(queue.length);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+  const addToSyncQueue = (
+    rec: BaseRecord,
+    action: SyncQueueItem['action'] = 'UPDATE'
+  ) => {
+    const updated = addSyncQueueItem({
+      recordId: rec.id,
+      recordRid: rec.rid,
+      action,
+      entity: rec.entity,
+      title: rec.title,
+      department: rec.department
+    });
+    setSyncQueue(updated);
   };
 
   const handleExportPdf = () => {
@@ -165,17 +201,31 @@ export default function App() {
     toast.success(isArabic ? 'تم تصدير تقرير PDF بنجاح' : 'PDF Report exported successfully');
   };
 
-  // Filter records by department when not 'All'
-  const visibleRecords = activeDepartment === 'All'
-    ? records
-    : records.filter(r => r.department === activeDepartment || r.entity === 'wps' || r.entity === 'gate');
+  // User Profile & RBAC Department Access Control State
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile>(getStoredUserProfile);
+  const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState<boolean>(false);
+
+  const handleSelectUserProfile = (profile: UserProfile) => {
+    setCurrentUserProfile(profile);
+    saveUserProfile(profile);
+    toast.info(
+      isArabic
+        ? `تم التبديل إلى: ${profile.nameArabic} (${profile.primaryDepartment === 'All' ? 'عرض شامل' : profile.primaryDepartment})`
+        : `Switched profile: ${profile.name} (${profile.primaryDepartment})`
+    );
+  };
+
+  // Filter records dynamically based on active user profile & assisting departments & header filter
+  const visibleRecords = useMemo(() => {
+    return filterRecordsForUser(records, currentUserProfile, activeDepartment);
+  }, [records, currentUserProfile, activeDepartment]);
 
   const [currentUser, setCurrentUser] = useState<{ id: string; name: string; email: string; role: 'Admin' | 'Supervisor' | 'Viewer'; department: string; lastActive: string }>({
-    id: 'u1',
-    name: 'Capt. Ahmed Al-Mansoori',
-    email: 'ahmed.m@pms11.offshore',
-    role: 'Admin',
-    department: 'Project Management',
+    id: currentUserProfile.id,
+    name: currentUserProfile.name,
+    email: `${currentUserProfile.id}@pms11.offshore`,
+    role: currentUserProfile.role === 'Admin' ? 'Admin' : 'Supervisor',
+    department: currentUserProfile.primaryDepartment,
     lastActive: 'Just now'
   });
 
@@ -188,9 +238,9 @@ export default function App() {
     setRecords(updated);
     setAuditLogs(getStoredAuditLogs());
     if (!navigator.onLine) {
-      addToSyncQueue(record.id);
-      if (secondRecord) addToSyncQueue(secondRecord.id);
-      toast.info(isArabic ? 'تم الحفظ محلياً (غير متصل - سيتم المزامنة لاحقاً)' : 'Saved locally (Offline - queued for sync)');
+      addToSyncQueue(record, 'CREATE');
+      if (secondRecord) addToSyncQueue(secondRecord, 'CREATE');
+      toast.info(isArabic ? 'تم الحفظ محلياً (غير متصل - تم إضافته لطابور المزامنة)' : 'Saved locally (Offline - queued for sync)');
     }
   };
 
@@ -199,13 +249,14 @@ export default function App() {
       toast.error(isArabic ? 'عذراً، صلاحيات الحذف وإزالة السجلات مقتصرة على المدير (Admin)' : 'Access denied: Deleting records is restricted to Admin role');
       return;
     }
+    const target = records.find(r => r.id === id);
     const updated = removeRecord(id, currentUser.name);
     setRecords(updated);
     setAuditLogs(getStoredAuditLogs());
     setSelectedRecord(null);
-    if (!navigator.onLine) {
-      addToSyncQueue(id);
-      toast.info(isArabic ? 'تم الحذف محلياً (غير متصل)' : 'Deleted locally (Offline)');
+    if (!navigator.onLine && target) {
+      addToSyncQueue(target, 'DELETE');
+      toast.info(isArabic ? 'تم الحذف محلياً (غير متصل - مضاف لطابور المزامنة)' : 'Deleted locally (Offline - added to sync queue)');
     }
   };
 
@@ -218,6 +269,9 @@ export default function App() {
     setAuditLogs(getStoredAuditLogs());
     if (selectedRecord?.id === id) {
       setSelectedRecord(updatedRecord);
+    }
+    if (!navigator.onLine) {
+      addToSyncQueue(updatedRecord, 'STATUS_CHANGE');
     }
   };
 
@@ -273,6 +327,8 @@ export default function App() {
       <Header
         currentDepartment={activeDepartment}
         onDepartmentChange={setActiveDepartment}
+        currentUserProfile={currentUserProfile}
+        onOpenUserProfileModal={() => setIsUserProfileModalOpen(true)}
         isArabic={isArabic}
         onToggleLanguage={() => setIsArabic(prev => !prev)}
         onOpenNewRecord={() => openNewRecordModal('task')}
@@ -282,8 +338,10 @@ export default function App() {
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         unreadNotificationsCount={unreadNotificationsCount}
         onExportPdf={handleExportPdf}
+        onOpenQrScanner={() => setIsQrScannerOpen(true)}
+        onOpenSyncQueueModal={() => setIsSyncQueueOpen(true)}
         isOnline={isOnline}
-        syncQueueCount={syncQueueCount}
+        syncQueueCount={syncQueue.length}
       />
 
       <div className="flex flex-1">
@@ -311,7 +369,56 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full overflow-y-auto">
+        <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full overflow-y-auto space-y-4">
+          {/* Active Department Scope Notification Banner */}
+          {currentUserProfile.primaryDepartment !== 'All' && (
+            <div className="bg-gradient-to-r from-slate-900 via-cyan-950/80 to-slate-900 border border-cyan-800/80 rounded-xl p-3 shadow-lg flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-cyan-900/60 text-cyan-300 border border-cyan-700/80">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-bold text-white flex items-center gap-2">
+                    <span>
+                      {isArabic
+                        ? `العرض المقيد حسب الإدارة: ${currentUserProfile.primaryDepartment}`
+                        : `Department Restricted View: ${currentUserProfile.primaryDepartment}`}
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-800 font-semibold">
+                      {isArabic ? currentUserProfile.nameArabic : currentUserProfile.name}
+                    </span>
+                  </div>
+                  <p className="text-slate-300 text-[11px] mt-0.5">
+                    {isArabic
+                      ? `يتم عرض المهام والأنشطة الخاصة بـ (${currentUserProfile.primaryDepartment}) ${
+                          currentUserProfile.assistingDepartments?.length
+                            ? `بالإضافة للإدارات المعاونة: [${currentUserProfile.assistingDepartments.join(' ، ')}]`
+                            : ''
+                        }`
+                      : `Filtering items for ${currentUserProfile.primaryDepartment} ${
+                          currentUserProfile.assistingDepartments?.length
+                            ? `+ Assisting: [${currentUserProfile.assistingDepartments.join(', ')}]`
+                            : ''
+                        }`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="text-right font-mono text-[11px] bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">
+                  <span className="text-slate-400">{isArabic ? 'السجلات المعروضة:' : 'Visible:'} </span>
+                  <span className="text-cyan-400 font-bold">{visibleRecords.length}</span>
+                  <span className="text-slate-500"> / {records.length}</span>
+                </div>
+                <button
+                  onClick={() => setIsUserProfileModalOpen(true)}
+                  className="px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition-all shadow"
+                >
+                  {isArabic ? 'تغيير الإدارة / الصلاحيات' : 'Change Scope'}
+                </button>
+              </div>
+            </div>
+          )}
           {activeTab === 'dashboard' && (
             <DashboardView
               metrics={metrics}
@@ -320,7 +427,7 @@ export default function App() {
               catalog={catalog}
               isArabic={isArabic}
               isOnline={isOnline}
-              syncQueueCount={syncQueueCount}
+              syncQueueCount={syncQueue.length}
               onNavigate={setActiveTab}
               onOpenNewRecord={() => openNewRecordModal('task')}
               onOpenExcelManager={() => setActiveTab('sheets')}
@@ -609,6 +716,65 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'deck_plan' && (
+            <DeckPlanView
+              records={records}
+              isArabic={isArabic}
+              onSelectRecord={setSelectedRecord}
+              onShowQrModal={(rec) => setQrModalRecord(rec)}
+              onUpdateRecord={handleSaveRecord}
+            />
+          )}
+
+          {activeTab === 'wps_mindmap' && (
+            <WpsMindmapView
+              records={records}
+              isArabic={isArabic}
+              onSelectRecord={setSelectedRecord}
+            />
+          )}
+
+          {activeTab === 'orchestration' && (
+            <OrchestrationView
+              records={records}
+              currentUser={currentUser}
+              isArabic={isArabic}
+              onSelectRecord={setSelectedRecord}
+              onSaveRecord={handleSaveRecord}
+              onUpdateRecordStatus={handleStatusChange}
+            />
+          )}
+
+          {activeTab === 'communication_hub' && (
+            <CommunicationHubView
+              records={records}
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              onMarkRead={handleMarkMessageRead}
+              onSelectRecord={setSelectedRecord}
+              currentUser={{
+                name: currentUser.name,
+                role: currentUser.role,
+                department: (currentUser.department || 'Marine') as Department
+              }}
+              isArabic={isArabic}
+            />
+          )}
+
+          {activeTab === 'document_repository' && (
+            <DocumentRepositoryView
+              isArabic={isArabic}
+              currentUser={{
+                name: currentUser.name,
+                role: currentUser.role,
+                department: currentUser.department
+              }}
+              onNavigateToOrchestrator={() => {
+                setActiveTab('orchestration');
+              }}
+            />
+          )}
+
           {activeTab === 'admin_console' && (
             <AdminConsoleView
               currentUser={currentUser}
@@ -657,6 +823,23 @@ export default function App() {
         onEdit={openEditRecordModal}
         onDelete={handleDeleteRecord}
         onStatusChange={handleStatusChange}
+        onShowQrModal={(rec) => setQrModalRecord(rec)}
+        isArabic={isArabic}
+      />
+
+      {/* QR Code Asset Tag Badge Modal */}
+      <QRCodeModal
+        record={qrModalRecord}
+        onClose={() => setQrModalRecord(null)}
+        isArabic={isArabic}
+      />
+
+      {/* QR Scanner / Tag Lookup Modal */}
+      <QRScannerModal
+        isOpen={isQrScannerOpen}
+        onClose={() => setIsQrScannerOpen(false)}
+        records={records}
+        onSelectRecord={setSelectedRecord}
         isArabic={isArabic}
       />
 
@@ -693,6 +876,25 @@ export default function App() {
         records={records}
         isArabic={isArabic}
         onSelectRecord={setSelectedRecord}
+      />
+
+      {/* User Profile & Department Access Control (RBAC) Modal */}
+      <UserProfileModal
+        isOpen={isUserProfileModalOpen}
+        onClose={() => setIsUserProfileModalOpen(false)}
+        currentUser={currentUserProfile}
+        onSelectUser={handleSelectUserProfile}
+        isArabic={isArabic}
+      />
+
+      {/* Offline Sync Operations Queue Modal */}
+      <SyncQueueModal
+        isOpen={isSyncQueueOpen}
+        onClose={() => setIsSyncQueueOpen(false)}
+        syncQueue={syncQueue}
+        onUpdateQueue={setSyncQueue}
+        isOnline={isOnline}
+        isArabic={isArabic}
       />
     </div>
   );

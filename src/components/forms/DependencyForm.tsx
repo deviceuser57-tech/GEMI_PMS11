@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BaseRecord, DependencyData, DependencyType, Department } from '../../types/pms';
-import { GitBranch, CheckCircle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { GitBranch, CheckCircle, ArrowRight, ShieldCheck, Printer } from 'lucide-react';
 
 interface DependencyFormProps {
   initialRecord?: BaseRecord;
@@ -226,21 +226,32 @@ export const DependencyForm: React.FC<DependencyFormProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+      <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-800 no-print">
         <button
           type="button"
-          onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium"
+          onClick={() => window.print()}
+          className="px-4 py-2 rounded-lg border border-amber-800/80 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60 text-xs font-bold flex items-center gap-1.5 transition-colors"
         >
-          {isArabic ? 'إلغاء' : 'Cancel'}
+          <Printer className="w-4 h-4 text-amber-400" />
+          <span>{isArabic ? 'طباعة النموذج' : 'Print Form'}</span>
         </button>
-        <button
-          type="submit"
-          className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs shadow-md shadow-purple-600/20 flex items-center gap-1.5"
-        >
-          <CheckCircle className="w-4 h-4" />
-          {isArabic ? 'حفظ رابط الاعتمادية' : 'Save Precedence Link'}
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium"
+          >
+            {isArabic ? 'إلغاء' : 'Cancel'}
+          </button>
+          <button
+            type="submit"
+            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
+          >
+            <CheckCircle className="w-4 h-4" />
+            <span>{isArabic ? 'حفظ رابط الاعتمادية' : 'Save Precedence Link'}</span>
+          </button>
+        </div>
       </div>
     </form>
   );

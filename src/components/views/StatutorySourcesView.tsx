@@ -44,8 +44,8 @@ export const StatutorySourcesView: React.FC<StatutorySourcesViewProps> = ({
           </div>
           <p className="text-xs text-slate-400 mt-1">
             {isArabic
-              ? 'الكودات والاتفاقيات الدولية المرجعية: SOLAS, MARPOL, DNV Rules, IMCA D014, CAP 437, MLC 2006, API RP 2D.'
-              : 'Official international maritime conventions, classification standards, and client specs governing closure criteria.'}
+              ? 'الكودات والاتفاقيات الدولية والوطنية المرجعية: SOLAS, MARPOL, DNV Rules, IMCA D014, ECAR Part 138 (سلطة الطيران المدني المصري ECAA), MLC 2006, API RP 2D.'
+              : 'Official international maritime conventions and Egyptian Civil Aviation ECAR Part 138 standards governing closure criteria.'}
           </p>
         </div>
 

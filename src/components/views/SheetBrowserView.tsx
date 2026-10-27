@@ -11,7 +11,9 @@ import {
   AlertTriangle,
   Layers,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { useGsapPageReveal } from '../../lib/animations';
 import * as XLSX from 'xlsx';

@@ -10,12 +10,24 @@ import {
   AlertCircle,
   ShieldCheck,
   Bell,
-  FileText
+  FileText,
+  QrCode,
+  Scan,
+  UserCheck,
+  Shield,
+  Building2,
+  Database,
+  RefreshCw,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
+import { UserProfile } from '../lib/rbac';
 
 interface HeaderProps {
   currentDepartment: Department;
   onDepartmentChange: (dept: Department) => void;
+  currentUserProfile?: UserProfile;
+  onOpenUserProfileModal?: () => void;
   isArabic: boolean;
   onToggleLanguage: () => void;
   onOpenNewRecord: () => void;
@@ -25,6 +37,8 @@ interface HeaderProps {
   onOpenNotifications: () => void;
   unreadNotificationsCount: number;
   onExportPdf: () => void;
+  onOpenQrScanner?: () => void;
+  onOpenSyncQueueModal?: () => void;
   isOnline: boolean;
   syncQueueCount: number;
 }
@@ -32,6 +46,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   currentDepartment,
   onDepartmentChange,
+  currentUserProfile,
+  onOpenUserProfileModal,
   isArabic,
   onToggleLanguage,
   onOpenNewRecord,
@@ -41,6 +57,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNotifications,
   unreadNotificationsCount,
   onExportPdf,
+  onOpenQrScanner,
+  onOpenSyncQueueModal,
   isOnline,
   syncQueueCount
 }) => {
@@ -58,22 +76,22 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 lg:px-6 py-2.5">
+    <header className="sticky top-0 z-30 bg-[#0d2137]/95 backdrop-blur-md border-b border-[#1a365d] px-4 lg:px-6 py-2.5">
       <div className="flex items-center justify-between gap-3">
         {/* Barge Identity & Branding */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#ff6600] to-amber-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/25">
               <Anchor className="w-5 h-5" />
             </div>
-            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-slate-900" title="Online & Operational" />
+            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#0d2137]" title="Online & Operational" />
           </div>
 
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-extrabold text-base lg:text-lg tracking-tight text-white flex items-center gap-1.5">
                 <span>PMS-11</span>
-                <span className="text-cyan-400 font-semibold text-xs px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800">
+                <span className="text-white font-bold text-xs px-2 py-0.5 rounded bg-[#ff6600] border border-orange-400">
                   CLOSURE LOOP
                 </span>
               </h1>
@@ -81,14 +99,19 @@ export const Header: React.FC<HeaderProps> = ({
                 <ShieldCheck className="w-3 h-3" />
                 {isArabic ? 'بوابة 1: نشطة' : 'GATE-1 ACTIVE'}
               </span>
-              <span className={`hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border ${
-                isOnline
-                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
-                  : 'bg-amber-950/80 text-amber-300 border-amber-800 animate-pulse'
-              }`}>
+              <button
+                type="button"
+                onClick={onOpenSyncQueueModal}
+                className={`hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border transition-all cursor-pointer ${
+                  isOnline
+                    ? 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-800'
+                    : 'bg-amber-950/80 hover:bg-amber-900 text-amber-300 border-amber-800 animate-pulse'
+                }`}
+                title={isArabic ? 'عرض سجل وتفاصيل المزامنة دون اتصال' : 'View Offline Sync Queue & Retry'}
+              >
                 <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                {isOnline ? (isArabic ? 'متصل (Online)' : 'Online') : (isArabic ? `غير متصل - مزامنة (${syncQueueCount})` : `Offline - Sync (${syncQueueCount})`)}
-              </span>
+                <span>{isOnline ? (isArabic ? 'متصل (Online)' : 'Online') : (isArabic ? `غير متصل - مزامنة (${syncQueueCount})` : `Offline - Sync (${syncQueueCount})`)}</span>
+              </button>
             </div>
             <p className="text-[11px] text-slate-400 hidden sm:block">
               {isArabic
@@ -112,15 +135,44 @@ export const Header: React.FC<HeaderProps> = ({
             </kbd>
           </button>
 
-          {/* Department Filter (Department RLS) */}
-          <div className="hidden sm:flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg p-1 text-xs">
-            <span className="text-[11px] text-slate-400 px-1 font-medium">
-              {isArabic ? 'القسم:' : 'Dept:'}
+          {/* User Profile & Department Access Trigger (RBAC) */}
+          {currentUserProfile && onOpenUserProfileModal && (
+            <button
+              onClick={onOpenUserProfileModal}
+              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-950/90 border border-cyan-800 hover:border-cyan-500 text-xs text-slate-200 transition-all shadow-md group"
+              title={isArabic ? 'تغيير الشخصية الوظيفية وصلاحيات الإدارات' : 'Change Persona & Department Scope'}
+            >
+              <div className={`w-6 h-6 rounded-lg ${currentUserProfile.avatarColor} text-white font-bold flex items-center justify-center text-[10px]`}>
+                {currentUserProfile.name.substring(0, 2).toUpperCase()}
+              </div>
+              <div className="text-left hidden lg:block">
+                <div className="font-bold text-white text-[11px] leading-tight flex items-center gap-1">
+                  <span>{isArabic ? currentUserProfile.nameArabic : currentUserProfile.name}</span>
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
+                    {currentUserProfile.role === 'Admin' ? 'Admin' : currentUserProfile.primaryDepartment}
+                  </span>
+                </div>
+                <div className="text-[10px] text-cyan-400 font-medium">
+                  {currentUserProfile.primaryDepartment === 'All'
+                    ? (isArabic ? 'عرض شامل لكافة الإدارات' : 'Global Executive Access')
+                    : (isArabic
+                        ? `الإدارة: ${currentUserProfile.primaryDepartment} ${currentUserProfile.assistingDepartments?.length ? `(+${currentUserProfile.assistingDepartments.length} معاونة)` : ''}`
+                        : `Dept: ${currentUserProfile.primaryDepartment} ${currentUserProfile.assistingDepartments?.length ? `(+${currentUserProfile.assistingDepartments.length})` : ''}`)}
+                </div>
+              </div>
+              <UserCheck className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-12 transition-transform ml-1" />
+            </button>
+          )}
+
+          {/* Quick Department View Filter */}
+          <div className="hidden xl:flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg p-1 text-xs">
+            <span className="text-[10px] text-slate-400 px-1 font-medium">
+              {isArabic ? 'تصفية:' : 'Filter:'}
             </span>
             <select
               value={currentDepartment}
               onChange={e => onDepartmentChange(e.target.value as Department)}
-              className="bg-slate-900 text-slate-200 text-xs rounded border-none px-2 py-1 focus:ring-1 focus:ring-cyan-500 font-medium"
+              className="bg-slate-900 text-slate-200 text-xs rounded border-none px-2 py-0.5 focus:ring-1 focus:ring-cyan-500 font-medium"
             >
               {departments.map(d => (
                 <option key={d} value={d}>
@@ -149,6 +201,34 @@ export const Header: React.FC<HeaderProps> = ({
             <FileText className="w-4 h-4 text-rose-400" />
             <span className="hidden md:inline">{isArabic ? 'تصدير PDF' : 'PDF Report'}</span>
           </button>
+
+          {/* QR Rig Tag Scanner Button */}
+          {onOpenQrScanner && (
+            <button
+              onClick={onOpenQrScanner}
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-800 text-cyan-300 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+              title="Scan Rig Tag / QR Code"
+            >
+              <Scan className="w-4 h-4 text-cyan-400" />
+              <span className="hidden sm:inline">{isArabic ? 'ماسح الـ QR' : 'Scan Tag'}</span>
+            </button>
+          )}
+
+          {/* Offline Sync Queue Trigger */}
+          {onOpenSyncQueueModal && (
+            <button
+              onClick={onOpenSyncQueueModal}
+              className="relative p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition-all flex items-center gap-1.5"
+              title={isArabic ? 'سجل عمليات المزامنة دون اتصال' : 'Offline Sync Queue'}
+            >
+              <Database className={`w-4 h-4 ${syncQueueCount > 0 ? 'text-amber-400 animate-pulse' : 'text-cyan-400'}`} />
+              {syncQueueCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-amber-500 text-slate-950 font-mono">
+                  {syncQueueCount}
+                </span>
+              )}
+            </button>
+          )}
 
           {/* Notification Center Bell */}
           <button

@@ -1,0 +1,21 @@
+{
+  "name": "PMS-11 Offshore Closure Loop",
+  "short_name": "PMS-11 Rig",
+  "description": "نظام إدارة حلقات الإغلاق والجاهزية التشغيلية لبارجة PMS-11 ومتابعة الـ 40 شيت عمل وحزم العمل والسلامة البحرية",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0891b2",
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BaseRecord, CrewMemberData, CrewCertificateData, Department } from '../../types/pms';
-import { User, Award, Calendar, FileText, Upload, AlertTriangle, CheckCircle, ShieldCheck } from 'lucide-react';
+import { User, Award, Calendar, FileText, Upload, AlertTriangle, CheckCircle, ShieldCheck, Printer } from 'lucide-react';
 
 interface CrewProfileFormProps {
   initialRecord?: BaseRecord;
@@ -438,21 +438,32 @@ export const CrewProfileForm: React.FC<CrewProfileFormProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+      <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-800 no-print">
         <button
           type="button"
-          onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium transition-colors"
+          onClick={() => window.print()}
+          className="px-4 py-2 rounded-lg border border-amber-800/80 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60 text-xs font-bold flex items-center gap-1.5 transition-colors"
         >
-          {isArabic ? 'إلغاء' : 'Cancel'}
+          <Printer className="w-4 h-4 text-amber-400" />
+          <span>{isArabic ? 'طباعة النموذج' : 'Print Form'}</span>
         </button>
-        <button
-          type="submit"
-          className="px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium text-xs shadow-md shadow-cyan-600/20 transition-all flex items-center gap-1.5"
-        >
-          <CheckCircle className="w-4 h-4" />
-          {isArabic ? 'حفظ بيانات الطاقم والشهادة' : 'Save Crew & Certificate'}
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium transition-colors"
+          >
+            {isArabic ? 'إلغاء' : 'Cancel'}
+          </button>
+          <button
+            type="submit"
+            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5"
+          >
+            <CheckCircle className="w-4 h-4" />
+            <span>{isArabic ? 'حفظ بيانات الطاقم والشهادة' : 'Save Crew & Certificate'}</span>
+          </button>
+        </div>
       </div>
     </form>
   );

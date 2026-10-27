@@ -3,21 +3,38 @@
 @layer base {
   body {
     font-family: 'Cairo', 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #0b1727;
+    color: #f8fafc;
   }
 }
 
 @layer utilities {
   .glass-sidebar {
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(2, 6, 23, 0.99) 100%);
+    background: linear-gradient(180deg, #0f2942 0%, #0a192f 100%);
     backdrop-filter: blur(20px);
-    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.6);
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.5);
   }
   .nav-item-3d {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .nav-item-3d:hover {
-    transform: translateX(5px) scale(1.02);
-    box-shadow: 0 4px 25px rgba(6, 182, 212, 0.18);
+    transform: translateX(-4px) scale(1.01);
+  }
+  .bg-navy-900 {
+    background-color: #0d2137;
+  }
+  .bg-navy-950 {
+    background-color: #071527;
+  }
+  .border-navy-800 {
+    border-color: #1a365d;
+  }
+  .accent-orange {
+    background-color: #ff6600;
+  }
+  .text-orange-glow {
+    color: #ff6600;
+    text-shadow: 0 0 12px rgba(255, 102, 0, 0.35);
   }
 }
 
@@ -28,14 +45,121 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(13, 33, 55, 0.6);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.8);
+  background: rgba(30, 58, 138, 0.8);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(14, 165, 233, 0.7);
+  background: #ff6600;
 }
+
+/* Print Utilities & Media Query */
+@media print {
+  html, body, #root, main, div {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12pt !important;
+  }
+
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+
+  /* Completely remove modal backdrop overlay & blur styles during print */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    z-index: auto !important;
+    box-shadow: none !important;
+  }
+
+  .printable-area {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: 2px solid #000000 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 24px !important;
+    margin: 0 auto !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid;
+  }
+
+  .printable-area * {
+    color: #000000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  .printable-area h1,
+  .printable-area h2,
+  .printable-area h3,
+  .printable-area h4 {
+    color: #000000 !important;
+    font-weight: 800 !important;
+  }
+
+  .printable-area input,
+  .printable-area select,
+  .printable-area textarea {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  .printable-area .bg-slate-900,
+  .printable-area .bg-slate-950,
+  .printable-area .bg-slate-800,
+  .printable-area .bg-navy-900 {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  .printable-area .text-white,
+  .printable-area .text-slate-100,
+  .printable-area .text-slate-200,
+  .printable-area .text-slate-300,
+  .printable-area .text-slate-400,
+  .printable-area .text-cyan-300,
+  .printable-area .text-cyan-400,
+  .printable-area .text-orange-500 {
+    color: #0f172a !important;
+  }
+
+  button {
+    display: none !important;
+  }
+}
+
+
+

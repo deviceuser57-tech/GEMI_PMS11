@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BaseRecord, EntityType, Department, RecordStatus } from '../../types/pms';
-import { Layers, CheckCircle, Mic, MicOff } from 'lucide-react';
+import { Layers, CheckCircle, Mic, MicOff, Printer } from 'lucide-react';
 
 interface GenericRecordFormProps {
   initialRecord?: BaseRecord;
@@ -25,6 +25,9 @@ export const GenericRecordForm: React.FC<GenericRecordFormProps> = ({
   const [description, setDescription] = useState(initialRecord?.description || '');
   const [wpsId, setWpsId] = useState(initialRecord?.wps_id || 'WPS-01');
   const [department, setDepartment] = useState<Department>(initialRecord?.department || 'Marine');
+  const [assistingDepartments, setAssistingDepartments] = useState<Department[]>(
+    initialRecord?.assisting_departments || []
+  );
   const [status, setStatus] = useState<RecordStatus>(initialRecord?.status || 'Draft');
   const [owner, setOwner] = useState(initialRecord?.owner || 'Superintendent');
   const [dueDate, setDueDate] = useState(initialRecord?.due_date || '');
@@ -77,6 +80,7 @@ export const GenericRecordForm: React.FC<GenericRecordFormProps> = ({
       description,
       wps_id: wpsId,
       department,
+      assisting_departments: assistingDepartments,
       status,
       owner,
       due_date: dueDate || undefined,
@@ -203,12 +207,12 @@ export const GenericRecordForm: React.FC<GenericRecordFormProps> = ({
 
         <div>
           <label className="block text-xs font-medium text-slate-300 mb-1">
-            {isArabic ? 'القسم المسؤول (Department)' : 'Department'}
+            {isArabic ? 'القسم الرئيسي المسؤول (Primary Department)' : 'Primary Department'}
           </label>
           <select
             value={department}
             onChange={e => setDepartment(e.target.value as any)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm"
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm font-semibold text-cyan-300"
           >
             <option value="Marine">Marine</option>
             <option value="Technical & Maintenance">Technical & Maintenance</option>
@@ -220,6 +224,56 @@ export const GenericRecordForm: React.FC<GenericRecordFormProps> = ({
             <option value="QA/QC">QA/QC</option>
             <option value="Project Management">Project Management</option>
           </select>
+        </div>
+
+        {/* Multi-Department Tagging Section */}
+        <div className="md:col-span-2 bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+          <label className="block text-xs font-semibold text-slate-300">
+            {isArabic ? 'تخصيص الإدارات المعاونة والمشتركة (Multi-Department Tagging):' : 'Assisting & Collaborating Departments:'}
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              'Marine',
+              'Technical & Maintenance',
+              'HSE & Safety',
+              'Diving Operations',
+              'Pipelay Operations',
+              'Catering & Accommodation',
+              'Aviation & Helideck',
+              'QA/QC',
+              'Project Management'
+            ]
+              .filter(d => d !== department)
+              .map(dept => {
+                const isSelected = assistingDepartments.includes(dept as Department);
+                return (
+                  <button
+                    key={dept}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        setAssistingDepartments(assistingDepartments.filter(d => d !== dept));
+                      } else {
+                        setAssistingDepartments([...assistingDepartments, dept as Department]);
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 border ${
+                      isSelected
+                        ? 'bg-cyan-950/90 text-cyan-300 border-cyan-500 shadow-sm'
+                        : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>{isSelected ? '✓' : '+'}</span>
+                    <span>{dept}</span>
+                  </button>
+                );
+              })}
+          </div>
+          <p className="text-[10px] text-slate-500">
+            {isArabic
+              ? 'تسمح الإدارات المعاونة لأعضاء ومدريري هذه الإدارات أيضاً برؤية ومتابعة هذا السجل ومخرجاته.'
+              : 'Tagging assisting departments allows users from those departments to view & track this record.'}
+          </p>
         </div>
 
         <div>
@@ -299,22 +353,34 @@ export const GenericRecordForm: React.FC<GenericRecordFormProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+      <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-800 no-print">
         <button
           type="button"
-          onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium"
+          onClick={() => window.print()}
+          className="px-4 py-2 rounded-lg border border-amber-800/80 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60 text-xs font-bold flex items-center gap-1.5 transition-colors"
         >
-          {isArabic ? 'إلغاء' : 'Cancel'}
+          <Printer className="w-4 h-4 text-amber-400" />
+          <span>{isArabic ? 'طباعة النموذج' : 'Print Form'}</span>
         </button>
-        <button
-          type="submit"
-          className="px-5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs shadow-md shadow-cyan-600/20 flex items-center gap-1.5"
-        >
-          <CheckCircle className="w-4 h-4" />
-          {isArabic ? 'حفظ السجل' : 'Save Record'}
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium"
+          >
+            {isArabic ? 'إلغاء' : 'Cancel'}
+          </button>
+          <button
+            type="submit"
+            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
+          >
+            <CheckCircle className="w-4 h-4" />
+            <span>{isArabic ? 'حفظ السجل' : 'Save Record'}</span>
+          </button>
+        </div>
       </div>
     </form>
   );
 };
+

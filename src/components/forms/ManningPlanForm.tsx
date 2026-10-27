@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BaseRecord, ManningPlanData, Department } from '../../types/pms';
-import { Users, CheckCircle, ShieldAlert } from 'lucide-react';
+import { Users, CheckCircle, ShieldAlert, Printer } from 'lucide-react';
 
 interface ManningPlanFormProps {
   initialRecord?: BaseRecord;
@@ -200,21 +200,32 @@ export const ManningPlanForm: React.FC<ManningPlanFormProps> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+      <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-800 no-print">
         <button
           type="button"
-          onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium"
+          onClick={() => window.print()}
+          className="px-4 py-2 rounded-lg border border-amber-800/80 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60 text-xs font-bold flex items-center gap-1.5 transition-colors"
         >
-          {isArabic ? 'إلغاء' : 'Cancel'}
+          <Printer className="w-4 h-4 text-amber-400" />
+          <span>{isArabic ? 'طباعة النموذج' : 'Print Form'}</span>
         </button>
-        <button
-          type="submit"
-          className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-md shadow-blue-600/20 flex items-center gap-1.5"
-        >
-          <CheckCircle className="w-4 h-4" />
-          {isArabic ? 'حفظ خطة المانينج' : 'Save Manning Plan'}
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-medium"
+          >
+            {isArabic ? 'إلغاء' : 'Cancel'}
+          </button>
+          <button
+            type="submit"
+            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
+          >
+            <CheckCircle className="w-4 h-4" />
+            <span>{isArabic ? 'حفظ خطة المانينج' : 'Save Manning Plan'}</span>
+          </button>
+        </div>
       </div>
     </form>
   );

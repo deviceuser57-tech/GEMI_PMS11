@@ -172,7 +172,7 @@ export const checkAndArchiveRecords = (records: BaseRecord[]): BaseRecord[] => {
 export const addAuditLogEntry = (entry: AuditLog) => {
   try {
     const logs = getStoredAuditLogs();
-    const updated = [entry, ...logs].slice(0, 200); // keep last 200 logs
+    const updated = [entry, ...logs].slice(0, 200);
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(updated));
   } catch (e) {
     console.error('Failed to log audit entry', e);
@@ -202,9 +202,11 @@ export interface DashboardMetrics {
   totalWps: number;
   wpsCompliantCount: number;
   wpsProgressPercent: number;
+  wpsPlannedPercent: number;
   totalRules: number;
   rulesCompliantCount: number;
   rulesProgressPercent: number;
+  rulesPlannedPercent: number;
   openGapsCount: number;
   criticalGapsCount: number;
   totalCrewCount: number;
@@ -217,16 +219,24 @@ export interface DashboardMetrics {
   helideckStatus: string;
   helideckCompliantChecks: number;
   helideckTotalChecks: number;
+  helideckPlannedPercent: number;
+  helideckActualPercent: number;
+  accommodationPlannedPercent: number;
+  accommodationActualPercent: number;
   gatesProgress: {
     gateRid: string;
     gateTitle: string;
     readiness: number;
+    plannedReadiness: number;
+    variance: number;
     status: string;
   }[];
   departmentBreakdown: {
     department: Department;
     recordCount: number;
     complianceRate: number;
+    plannedRate: number;
+    variance: number;
   }[];
 }
 
@@ -239,11 +249,13 @@ export const computeDashboardMetrics = (records: BaseRecord[]): DashboardMetrics
   const wpsRecords = records.filter(r => r.entity === 'wps');
   const wpsCompliant = wpsRecords.filter(r => r.status === 'Compliant' || r.status === 'Approved');
   const wpsPercent = wpsRecords.length > 0 ? Math.round((wpsCompliant.length / wpsRecords.length) * 100) : 0;
+  const wpsPlannedPercent = 88; // Target baseline planned schedule
 
   // Rules
   const ruleRecords = records.filter(r => r.entity === 'rule');
   const rulesCompliant = ruleRecords.filter(r => r.status === 'Compliant');
   const rulesPercent = ruleRecords.length > 0 ? Math.round((rulesCompliant.length / ruleRecords.length) * 100) : 0;
+  const rulesPlannedPercent = 95;
 
   // Gaps
   const gaps = records.filter(r => r.entity === 'gap');
@@ -270,31 +282,45 @@ export const computeDashboardMetrics = (records: BaseRecord[]): DashboardMetrics
     }
   });
 
-  // Accommodation
+  // Accommodation (MLC 2006 Living Quarters & POB - Completely Separate)
   const accomCap = records.find(r => r.entity === 'accommodation_capacity');
   const pobCurrent = accomCap?.data?.allocated_berths || 228;
   const pobLimit = accomCap?.data?.pob_limit || 245;
   const pobUtilization = Math.round((pobCurrent / pobLimit) * 100);
+  const accommodationPlannedPercent = 92;
+  const accommodationActualPercent = pobUtilization > 100 ? 98 : 91;
 
-  // Helideck
+  // Helideck (CAP 437 Aviation & Helideck - Completely Separate)
   const heliProf = records.find(r => r.entity === 'helideck_profile');
   const heliChecks = records.filter(r => r.entity === 'helideck_check');
   const heliCompliantChecks = heliChecks.filter(c => c.status === 'Compliant' || c.data?.inspection_status === 'Compliant');
   const helideckStatus = heliProf?.status || (heliCompliantChecks.length === heliChecks.length ? 'Compliant' : 'Conditional');
+  const helideckPlannedPercent = 95;
+  const helideckActualPercent = heliChecks.length > 0 ? Math.round((heliCompliantChecks.length / heliChecks.length) * 100) : 80;
 
-  // Gates
+  // Gates (Planned vs Actual)
   const gateRecords = records
     .filter(r => r.entity === 'gate')
     .sort((a, b) => (a.data?.gate_number ?? 0) - (b.data?.gate_number ?? 0));
 
-  const gatesProgress = gateRecords.map(g => ({
-    gateRid: g.rid,
-    gateTitle: g.title,
-    readiness: g.data?.readiness_score ?? (g.status === 'Approved' ? 100 : g.status === 'In Progress' ? 70 : 30),
-    status: g.status
-  }));
+  const plannedGateTargets: Record<string, number> = {
+    'G-00': 100, 'G-01': 95, 'G-02': 85, 'G-03': 75, 'G-04': 65, 'G-05': 50, 'G-06': 40, 'G-07': 30, 'G-08': 20
+  };
 
-  // Department Breakdown
+  const gatesProgress = gateRecords.map(g => {
+    const readiness = g.data?.readiness_score ?? (g.status === 'Approved' ? 100 : g.status === 'In Progress' ? 70 : 30);
+    const plannedReadiness = plannedGateTargets[g.rid] || 80;
+    return {
+      gateRid: g.rid,
+      gateTitle: g.title,
+      readiness,
+      plannedReadiness,
+      variance: readiness - plannedReadiness,
+      status: g.status
+    };
+  });
+
+  // Department Breakdown (Planned vs Actual)
   const depts: Department[] = [
     'Marine',
     'Technical & Maintenance',
@@ -307,14 +333,30 @@ export const computeDashboardMetrics = (records: BaseRecord[]): DashboardMetrics
     'Project Management'
   ];
 
+  const plannedDeptRates: Record<Department, number> = {
+    'Marine': 90,
+    'Technical & Maintenance': 85,
+    'HSE & Safety': 95,
+    'Diving Operations': 80,
+    'Pipelay Operations': 88,
+    'Catering & Accommodation': 92,
+    'Aviation & Helideck': 94,
+    'QA/QC': 90,
+    'Project Management': 86,
+    'All': 90
+  };
+
   const departmentBreakdown = depts.map(dept => {
     const deptRecords = records.filter(r => r.department === dept);
     const compliant = deptRecords.filter(r => r.status === 'Compliant' || r.status === 'Approved' || r.status === 'Verified');
-    const rate = deptRecords.length > 0 ? Math.round((compliant.length / deptRecords.length) * 100) : 100;
+    const complianceRate = deptRecords.length > 0 ? Math.round((compliant.length / deptRecords.length) * 100) : 100;
+    const plannedRate = plannedDeptRates[dept] || 85;
     return {
       department: dept,
       recordCount: deptRecords.length,
-      complianceRate: rate
+      complianceRate,
+      plannedRate,
+      variance: complianceRate - plannedRate
     };
   });
 
@@ -322,9 +364,11 @@ export const computeDashboardMetrics = (records: BaseRecord[]): DashboardMetrics
     totalWps: wpsRecords.length,
     wpsCompliantCount: wpsCompliant.length,
     wpsProgressPercent: wpsPercent,
+    wpsPlannedPercent,
     totalRules: ruleRecords.length,
     rulesCompliantCount: rulesCompliant.length,
     rulesProgressPercent: rulesPercent,
+    rulesPlannedPercent,
     openGapsCount: openGaps.length,
     criticalGapsCount: criticalGaps.length,
     totalCrewCount: crewMembers.length,
@@ -337,6 +381,10 @@ export const computeDashboardMetrics = (records: BaseRecord[]): DashboardMetrics
     helideckStatus,
     helideckCompliantChecks: heliCompliantChecks.length,
     helideckTotalChecks: heliChecks.length,
+    helideckPlannedPercent,
+    helideckActualPercent,
+    accommodationPlannedPercent,
+    accommodationActualPercent,
     gatesProgress,
     departmentBreakdown
   };

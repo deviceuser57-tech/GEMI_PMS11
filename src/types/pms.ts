@@ -80,6 +80,7 @@ export interface BaseRecord {
   description?: string;
   wps_id?: string; // e.g. "WPS-23", "WPS-19", "WPS-15"
   department: Department;
+  assisting_departments?: Department[]; // Secondary / Assisting Departments
   status: RecordStatus;
   owner?: string;
   due_date?: string;
@@ -153,12 +154,12 @@ export interface ManningPlanData {
 }
 
 export interface HelideckProfileData {
-  decision_type: 'Full CAP 437 Helideck' | 'Winching Area' | 'Not Applicable';
+  decision_type: 'Full ECAR 138 Helideck' | 'Winching Area' | 'Not Applicable';
   d_value: number; // e.g. 22.2 meters
   mtow_tonnes: number; // e.g. 12.6 tonnes (Sikorsky S-92 / AW139)
   lighting_status: 'Fully Operational' | 'Degraded' | 'Service Required';
   foam_system_type: 'DIFFS (Deck Integrated Fire Fighting System)' | 'Monitor Foam Cannons';
-  certification_body: string; // "HCA / CAA / Flag State"
+  certification_body: string; // "ECAA / Egyptian Civil Aviation Authority"
   certificate_valid_until: string;
   status_summary: string;
 }
@@ -243,7 +244,7 @@ export interface WorkbookSheetInfo {
   recordCount: number;
   description: string;
 }
-export type UserRole = 'Admin' | 'Supervisor' | 'Viewer';
+export type UserRole = 'Admin' | 'Supervisor' | 'Department Manager' | 'Engineer/Inspector' | 'Viewer';
 
 export interface Reminder {
   id: string;
@@ -253,3 +254,118 @@ export interface Reminder {
   due_date: string;
   is_dismissed: boolean;
 }
+
+export type VirtualEntityId =
+  | 'structural_heritage'
+  | 'dnv_compliance'
+  | 'pipelay_construction'
+  | 'commissioning_testing'
+  | 'marine_ops'
+  | 'hse_safety'
+  | 'crew_training'
+  | 'qaqc_vendor'
+  | 'helideck_aviation'
+  | 'environmental_emissions'
+  | 'financial_contract'
+  | 'third_party_class'
+  | 'gatekeeper';
+
+export interface VirtualEntityInfo {
+  id: VirtualEntityId;
+  nameEnglish: string;
+  nameArabic: string;
+  title: string;
+  avatarIcon: string;
+  color: string;
+  badge: string;
+  descriptionEnglish: string;
+  descriptionArabic: string;
+  specialization: string;
+}
+
+export interface DocumentRepositoryItem {
+  id: string;
+  document_code: string; // e.g. "DNV-ARC-01", "SOLAS-CH2", "CAP-437-MANUAL", "PMS11-STABILITY"
+  title: string;
+  title_arabic?: string;
+  category: 'Statutory Standard' | 'Class Rule' | 'Barge Manual' | 'Technical Spec' | 'Safety Procedure' | 'Audit Report';
+  department: Department;
+  assisting_departments?: Department[];
+  source_type: 'PDF' | 'XLSM' | 'DOCX' | 'External Link' | 'Statutory Code';
+  file_url?: string;
+  upload_date: string;
+  uploaded_by: string;
+  security_level: 'Public' | 'Restricted' | 'Confidential Admin' | 'Class & Flag Only';
+  revision: string;
+  summary_english: string;
+  summary_arabic?: string;
+  text_content: string; // Searchable text passage for RAG query engine
+  tags: string[];
+}
+
+export interface Citation {
+  citation_id: string; // "S1", "S2"
+  document_code: string;
+  title: string;
+  revision: string;
+  passage_snippet: string;
+  passage_snippet_arabic?: string;
+  url?: string;
+}
+
+export interface RemediationAction {
+  id: string;
+  gap_rid: string;
+  wps_id: string;
+  action_title: string;
+  assigned_department: Department;
+  assisting_departments?: Department[];
+  assigned_head: string;
+  priority: 'Critical Hard-Stop' | 'High Risk' | 'Medium' | 'Low';
+  suggested_due_date: string;
+  auto_created: boolean;
+  status: 'Suggested' | 'Assigned Task Created' | 'In Progress' | 'Verified Resolved';
+}
+
+export interface ChatMessage {
+  id: string;
+  sender_name: string;
+  sender_role: string;
+  sender_department: Department;
+  recipient_entity: string; // 'Admin', 'Barge Master', 'DNV Inspector', 'All Parties', or Virtual Entity ID
+  message: string;
+  record_rid?: string;
+  wps_id?: string;
+  timestamp: string;
+  is_read: boolean;
+  priority: 'Normal' | 'Urgent' | 'Critical Blocker';
+  category: 'Inquiry' | 'Approval Request' | 'CAPA Escalation' | 'Closeout Review' | 'System Automated';
+}
+
+export interface OrchestrationConsultation {
+  id: string;
+  query: string;
+  target_rid?: string;
+  target_wps?: string;
+  timestamp: string;
+  user_name: string;
+  user_role: string;
+  overall_status: 'READY' | 'CONDITIONAL' | 'INCOMPLETE' | 'BLOCKED';
+  gate_precedence_verdict: 'BLOCKED' | 'INCOMPLETE' | 'CONDITIONAL' | 'READY';
+  tier1_agent_status: 'Pass' | 'Fail' | 'Partial';
+  tier2_cross_dependency_status: 'Resolved' | 'Blocked Links' | 'Pending';
+  tier3_authority_signoff_status: 'Signed' | 'Pending Quorum' | 'Rejected';
+  decision_notice: string;
+  citations: Citation[];
+  remediation_actions: RemediationAction[];
+  entity_feedbacks: {
+    entity_id: VirtualEntityId;
+    verdict: 'Approved' | 'Conditional' | 'Blocked' | 'Incomplete';
+    confidence: number;
+    adviceEnglish: string;
+    adviceArabic: string;
+    actionItems: string[];
+  }[];
+}
+
+

@@ -135,44 +135,118 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div ref={containerRef} className="space-y-6">
-      {/* Executive Welcome & Readiness Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/70 border border-cyan-500/30 p-6 shadow-xl gsap-card">
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      {/* SCEDC Deep Navy Executive Welcome Container matching reference image_7e8f4996.png */}
+      <div className="rounded-3xl bg-[#0f2942] border border-[#1a3a5c] p-6 lg:p-8 shadow-2xl text-white space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 text-xs font-bold rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                OFFSHORE PIPELAY & CRANE BARGE PMS-11
+              <span className="px-3 py-1 text-xs font-bold rounded-full bg-[#ff6600] text-white shadow-md">
+                منظومة المشروعات والتدقيق الفني
               </span>
-              <span className="px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                GATE-1 MOBILIZATION PHASE
+              <span className="px-3 py-1 text-xs font-mono rounded-full bg-[#1a3a5c] text-cyan-300 border border-cyan-800">
+                SCEDC PORTAL 2026
               </span>
             </div>
-            <h2 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-white">
-              {isArabic ? 'مركز القيادة والتحكم التنفيذي للجاهزية البحرية' : 'Executive Command Center & Readiness Loop'}
+            <h2 className="text-2xl lg:text-4xl font-black tracking-tight text-white">
+              {isArabic ? 'مرحباً بك في لوحة المشترك والقيادة' : 'Welcome to Executive Command Portal'}
             </h2>
             <p className="text-slate-300 text-xs lg:text-sm max-w-2xl leading-relaxed">
               {isArabic
-                ? 'متابعة حية ومقارنة المستهدف المخطط مقابل الإنجاز الفعلي (Planned vs Actual) للـ 40 شيت، حزم WPS، بوابات الإغلاق، والأقسام.'
-                : 'Real-time Planned vs Actual comparison tracking across 40 worksheets, 24 WPS closure loops, gates, and operational departments.'}
+                ? 'تابع جميع الخدمات، المستهدفات المخططة مقابل الإنجاز الفعلي، وأرقام التحصيل والمرتبطة بإدارتك.'
+                : 'Monitor all operational services, planned vs actual variance, and department KPIs in real-time.'}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={onOpenExcelManager}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 transition-all shadow-md"
+              className="px-4 py-2.5 rounded-xl bg-[#1a3a5c] hover:bg-[#234b75] border border-slate-700 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-md"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
               <span>{isArabic ? 'كتالوج الـ 40 شيت' : '40 Worksheets'}</span>
             </button>
             <button
               onClick={onOpenNewRecord}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-cyan-600/30 transition-all"
+              className="px-5 py-2.5 rounded-xl bg-[#ff6600] hover:bg-orange-600 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-orange-500/30 transition-all"
             >
-              <span>{isArabic ? '+ تسجيل إدخال جديد' : '+ New Record'}</span>
+              <span>{isArabic ? '+ إضافة سجل جديد' : '+ New Record'}</span>
             </button>
           </div>
+        </div>
+
+        {/* 3 Status Info Cards inside Navy Banner */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 text-center">
+            <span className="text-[11px] text-slate-300 block">{isArabic ? 'آخر دخول للنظام' : 'Last System Login'}</span>
+            <span className="font-mono text-sm font-bold text-white mt-1 block">
+              23:30:18 2026-10-27
+            </span>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 text-center">
+            <span className="text-[11px] text-slate-300 block">{isArabic ? 'آخر قراءة مسجلة' : 'Last Recorded Entry'}</span>
+            <span className="font-mono text-sm font-bold text-amber-300 mt-1 block">
+              {records.length > 0 ? `${records.length} سجل معتمد` : 'لا توجد قراءة'}
+            </span>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 text-center">
+            <span className="text-[11px] text-slate-300 block">{isArabic ? 'حالة المزامنة والربط' : 'System Sync Status'}</span>
+            <span className="font-mono text-sm font-bold text-emerald-300 mt-1 block">
+              {isOnline ? (isArabic ? 'متصل ومحدث' : 'Online & Synced') : (isArabic ? `غير متصل (${syncQueueCount})` : `Offline (${syncQueueCount})`)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 4 Stat Summary Cards Row with Big Orange Numbers matching image_7e8f4996.png */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-[#0f2942] border border-[#1a3a5c] rounded-2xl p-6 shadow-lg text-center space-y-2 hover:border-orange-500/50 transition-all">
+          <span className="text-4xl lg:text-5xl font-black text-[#ff6600] font-mono block">
+            {records.filter(r => (r.entity === 'task' || r.entity === 'activity') && r.status !== 'Closed' && r.status !== 'Compliant').length || 0}
+          </span>
+          <span className="text-xs lg:text-sm font-bold text-slate-200 block">
+            {isArabic ? 'الحجوزات والمهام' : 'Tasks & Bookings'}
+          </span>
+          <span className="text-[10px] text-slate-400 block">
+            {isArabic ? 'المهام والتفتيش الفضي' : 'Active Inspections'}
+          </span>
+        </div>
+
+        <div className="bg-[#0f2942] border border-[#1a3a5c] rounded-2xl p-6 shadow-lg text-center space-y-2 hover:border-orange-500/50 transition-all">
+          <span className="text-4xl lg:text-5xl font-black text-[#ff6600] font-mono block">
+            {metrics.openGapsCount || 0}
+          </span>
+          <span className="text-xs lg:text-sm font-bold text-slate-200 block">
+            {isArabic ? 'طلبات التواصل والمحاضر' : 'Communications & Gaps'}
+          </span>
+          <span className="text-[10px] text-slate-400 block">
+            {isArabic ? 'الفجوات المفتوحة' : 'Open Findings & CAPA'}
+          </span>
+        </div>
+
+        <div className="bg-[#0f2942] border border-[#1a3a5c] rounded-2xl p-6 shadow-lg text-center space-y-2 hover:border-orange-500/50 transition-all">
+          <span className="text-4xl lg:text-5xl font-black text-[#ff6600] font-mono block">
+            {metrics.gatesProgress ? metrics.gatesProgress.filter(g => g.status !== 'Approved').length : 2}
+          </span>
+          <span className="text-xs lg:text-sm font-bold text-slate-200 block">
+            {isArabic ? 'استعلامات الأذونات والبوابات' : 'Gates & Permits Query'}
+          </span>
+          <span className="text-[10px] text-slate-400 block">
+            {isArabic ? 'بوابات الإغلاق النشطة' : 'Mobilization Gates'}
+          </span>
+        </div>
+
+        <div className="bg-[#0f2942] border border-[#1a3a5c] rounded-2xl p-6 shadow-lg text-center space-y-2 hover:border-orange-500/50 transition-all">
+          <span className="text-4xl lg:text-5xl font-black text-[#ff6600] font-mono block">
+            {metrics.wpsProgressPercent || 0}%
+          </span>
+          <span className="text-xs lg:text-sm font-bold text-slate-200 block">
+            {isArabic ? 'القراءات المرسلة والإنجاز' : 'Submitted Records & Progress'}
+          </span>
+          <span className="text-[10px] text-slate-400 block">
+            {isArabic ? 'نسبة الإنجاز العامة' : 'Overall Completion Rate'}
+          </span>
         </div>
       </div>
 

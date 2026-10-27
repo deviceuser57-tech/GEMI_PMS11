@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BaseRecord } from '../../types/pms';
 import { Plane, ShieldCheck, AlertTriangle, CheckCircle, Plus, FileText, Check, Search, Filter } from 'lucide-react';
+import ecar138ChecklistData from '../../data/ecar138_checklist.json';
 
 interface AviationHelideckViewProps {
   records: BaseRecord[];
@@ -8,163 +9,6 @@ interface AviationHelideckViewProps {
   onOpenNewRecord: (entity?: any) => void;
   onSelectRecord: (record: BaseRecord) => void;
 }
-
-export const ecar138ChecklistItems = [
-  {
-    code: 'ECAR 138 §§138.101-109, 107',
-    reqArabic: 'شهادة الصلاحية الفنية الصادرة من سلطة الطيران المدني المصري ECAA وتقرير السلامة المعتمد',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'ECAA Certificate',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138 §§138.201-207',
-    reqArabic: 'تطابق بيانات الشهادة والتقرير والمواصفات والأبعاد والاسم المعلن بالمهبط',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'ECAA Specs',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138 §§138.203, 138.213',
-    reqArabic: 'سجل مراجعات التعديلات وموافقة السلطة عند التغيير الهيكلي في المهبط',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'ECAA Revision Log',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.303, EAC 139-27 Ch. 2',
-    reqArabic: 'تحقق من تمييز المسؤول HLO وخطوط الإخلاء وسلسلة إيقاف العمليات',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'HLO Chain of Command',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.303, 138.317',
-    reqArabic: 'أجهزة قياس الرياح والملاحة والأنوار HLO وتدريب واستجابة الطوارئ',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Nav & Wind Sensors',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.105, 138.115, 138.203',
-    reqArabic: 'تحقق من التقارير السنوية وإجراءات الصيانة والدعم الفني للمهبط',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Annual Safety Report',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.307, 138.309, EAC 139-27 Ch. 1-4',
-    reqArabic: 'تقييم المخاطر والدراسة الفنية للمهبط وعوائق الاهتزازات المحيطة',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Risk Study & Vibrations',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR Part 39 / Part 138',
-    reqArabic: 'راجع سجل الإصلاح والأعمال والإجراءات التصحيحية الموثقة مع التكرار',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Corrective Actions Log',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.305, Helideck Safety Report',
-    reqArabic: 'ملف القوة البدنية والتجهيزات الفنية والمعايير المعتمدة لسطح الهبوط',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Structural Deck Strength',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.3, 138.307, EAC 139-27 Ch. 1',
-    reqArabic: 'خطة طوارئ المهبط واختبار الملاحظات السريعة ومعدات الحريق والتفريغ',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Emergency Plan & Foam',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.305, PMS-17',
-    reqArabic: 'طابق الحمولة الهيكلية الكلية M-Value المعتمدة مع السجلات',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'T-Value & MTOW Limit',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.305',
-    reqArabic: 'اختبار وسائل الاتصال والمعلومات المرسلة للطائرة قبل الحركة VHF',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'VHF Aviation Radio',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.305, 138.317',
-    reqArabic: 'تحقق من أنها أجهزة معتمدة واختيار أجهزة الاتصالات اللاسلكية لمسؤول HLO',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Approved HLO Comms',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.307(d)(3)-(4), EAC 139-27 Ch. 1',
-    reqArabic: 'وجود ووظيفة HLO والأنوار والشبكة المطاطية ومعدات الهبوط',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Landing Net & Lighting',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.307(d)(4)',
-    reqArabic: 'أبعاد TLOF ومساحة D-Value المعتمدة وتطابقها مع التصريح',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'TLOF & D-Value Check',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.307(d)(6)-(9)',
-    reqArabic: 'المنطقة المحصورة والمحيطة 210° وخلوها من العوائق المرتفعة',
-    category: 'المعايير الميدانية والسجلات',
-    standard: '210 Obstacle Free Sector',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.307(d)(18)',
-    reqArabic: 'اختبار معامل الاحتكاك لسطح TLOF ومقاومة الانزلاق (Friction >= 0.85)',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Surface Friction >= 0.85',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.307(c)(16)',
-    reqArabic: 'تصريف المياه وحجز الزيوت والوقود لمنع التسرب لسطح المهبط',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Helideck Drainage System',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.307, EAC 139-27',
-    reqArabic: 'معدات الإطفاء والرغوة التلقائية DIFFS / FOAM وحماية الطاقم HLO',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'DIFFS Foam System',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.311, EAC 139-27',
-    reqArabic: 'مراقبة اتجاه الرياح ومؤشر أجهزة القياس المعتمدة من سلطة الطيران المدني المصري',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'ECAA Wind Cone & Sensors',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.313, 138.315',
-    reqArabic: 'علامات التميز D-Value و T-Value وعلامة المهبط H والمحيط الأصفر المضيء',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'H Marking & TLOF Circle',
-    status: 'Compliant'
-  },
-  {
-    code: 'ECAR 138.317',
-    reqArabic: 'أنظمة الإضاءة الليلية TLOF/FATO المعتمدة لدى ECAA وضوء الإشارة البرّاق',
-    category: 'المعايير الميدانية والسجلات',
-    standard: 'Green Perimeter LED & Flash',
-    status: 'Compliant'
-  }
-];
 
 export const AviationHelideckView: React.FC<AviationHelideckViewProps> = ({
   records,
@@ -178,10 +22,11 @@ export const AviationHelideckView: React.FC<AviationHelideckViewProps> = ({
 
   const compliantCount = checks.filter(c => c.status === 'Compliant').length;
 
-  const filteredChecklist = ecar138ChecklistItems.filter(item => 
-    item.reqArabic.includes(searchTerm) || 
-    item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.standard.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredChecklist = ecar138ChecklistData.filter(item => 
+    item.reqArabic.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    item.clause.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.standard.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.reqEnglish && item.reqEnglish.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -299,7 +144,7 @@ export const AviationHelideckView: React.FC<AviationHelideckViewProps> = ({
               {filteredChecklist.map((item, index) => (
                 <tr key={index} className="hover:bg-[#071527]/50 transition-colors">
                   <td className="p-3 font-bold text-orange-400 text-[11px] whitespace-nowrap">
-                    {item.code}
+                    {item.clause}
                   </td>
                   <td className="p-3 text-slate-200 font-sans text-xs">
                     {item.reqArabic}

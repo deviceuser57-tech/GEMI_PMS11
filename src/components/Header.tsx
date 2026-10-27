@@ -28,6 +28,7 @@ interface HeaderProps {
   onDepartmentChange: (dept: Department) => void;
   currentUserProfile?: UserProfile;
   onOpenUserProfileModal?: () => void;
+  onOpenLoginModal?: () => void;
   isArabic: boolean;
   onToggleLanguage: () => void;
   onOpenNewRecord: () => void;
@@ -48,6 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
   onDepartmentChange,
   currentUserProfile,
   onOpenUserProfileModal,
+  onOpenLoginModal,
   isArabic,
   onToggleLanguage,
   onOpenNewRecord,
@@ -138,7 +140,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* User Profile & Department Access Trigger (RBAC) */}
           {currentUserProfile && onOpenUserProfileModal && (
             <button
-              onClick={onOpenUserProfileModal}
+              onClick={onOpenLoginModal || onOpenUserProfileModal}
               className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-950/90 border border-cyan-800 hover:border-cyan-500 text-xs text-slate-200 transition-all shadow-md group"
               title={isArabic ? 'تغيير الشخصية الوظيفية وصلاحيات الإدارات' : 'Change Persona & Department Scope'}
             >

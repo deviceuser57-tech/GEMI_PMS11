@@ -28,11 +28,7 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const handlePrint = () => {
-    try {
-      window.print();
-    } catch {
-      printRecordDetails(record, isArabic);
-    }
+    printRecordDetails(record, isArabic);
   };
 
   const handleQuickSave = () => {

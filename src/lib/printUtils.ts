@@ -31,18 +31,17 @@ export function triggerWindowPrint() {
 }
 
 export function printRecordDetails(record: PrintableRecord, isArabic: boolean = true) {
-  // First try direct print iframe/popup window approach for clean, styled printout
+  const title = isArabic 
+    ? `نموذج سجل التفتيش المعياري - ${record.rid || record.id}`
+    : `Standard Inspection Record Document - ${record.rid || record.id}`;
+
+  const entityLabel = record.entity ? String(record.entity).toUpperCase() : 'RECORD';
+  const statusLabel = record.status || 'OPEN';
+
+  let htmlContent = '';
   try {
     const printWindow = window.open('', '_blank', 'width=850,height=900,scrollbars=yes');
-    
-    const title = isArabic 
-      ? `نموذج سجل التفتيش المعياري - ${record.rid || record.id}`
-      : `Standard Inspection Record Document - ${record.rid || record.id}`;
-
-    const entityLabel = record.entity ? String(record.entity).toUpperCase() : 'RECORD';
-    const statusLabel = record.status || 'OPEN';
-
-    const htmlContent = `
+    htmlContent = `
       <!DOCTYPE html>
       <html dir="${isArabic ? 'rtl' : 'ltr'}" lang="${isArabic ? 'ar' : 'en'}">
       <head>
@@ -289,11 +288,45 @@ export function printRecordDetails(record: PrintableRecord, isArabic: boolean = 
       printWindow.document.write(htmlContent);
       printWindow.document.close();
     } else {
-      // Fallback to window.print directly
-      window.print();
+      printRecordViaIframe(htmlContent);
     }
   } catch (err) {
-    console.error('Print window error, falling back to window.print()', err);
+    console.error('Print window error, falling back to iframe print', err);
+    printRecordViaIframe(htmlContent);
+  }
+}
+
+export function printRecordViaIframe(htmlContent: string) {
+  try {
+    let iframe = document.getElementById('pms-print-hidden-iframe') as HTMLIFrameElement;
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'pms-print-hidden-iframe';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0px';
+      iframe.style.height = '0px';
+      iframe.style.border = '0px';
+      document.body.appendChild(iframe);
+    }
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(htmlContent);
+      doc.close();
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch {
+          window.print();
+        }
+      }, 400);
+    } else {
+      window.print();
+    }
+  } catch {
     window.print();
   }
 }

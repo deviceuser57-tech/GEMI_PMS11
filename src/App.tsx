@@ -47,13 +47,16 @@ import { CommunicationHubView } from './components/views/CommunicationHubView';
 import { OrchestrationView } from './components/views/OrchestrationView';
 import { DocumentRepositoryView } from './components/views/DocumentRepositoryView';
 import { WpsMindmapView } from './components/views/WpsMindmapView';
+import { OperationalTracksView } from './components/views/OperationalTracksView';
 import { getStoredMessages, saveMessages } from './lib/orchestratorEngine';
 import { ChatMessage } from './types/pms';
 import { NewRecordModal } from './components/modals/NewRecordModal';
 import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
+import { LoginModal } from './components/modals/LoginModal';
 import { QRCodeModal } from './components/modals/QRCodeModal';
 import { QRScannerModal } from './components/modals/QRScannerModal';
+import { MessageSquare } from 'lucide-react';
 import { generateMonthlyReport, generateAuditLogsReport } from './lib/pdfGenerator';
 
 export default function App() {
@@ -204,14 +207,20 @@ export default function App() {
   // User Profile & RBAC Department Access Control State
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile>(getStoredUserProfile);
   const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState<boolean>(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
   const handleSelectUserProfile = (profile: UserProfile) => {
     setCurrentUserProfile(profile);
     saveUserProfile(profile);
+    if (profile.primaryDepartment !== 'All') {
+      setActiveDepartment(profile.primaryDepartment);
+    } else {
+      setActiveDepartment('All');
+    }
     toast.info(
       isArabic
-        ? `تم التبديل إلى: ${profile.nameArabic} (${profile.primaryDepartment === 'All' ? 'عرض شامل' : profile.primaryDepartment})`
-        : `Switched profile: ${profile.name} (${profile.primaryDepartment})`
+        ? `تم الدخول بنجاح كـ: ${profile.nameArabic} (${profile.primaryDepartment === 'All' ? 'جميع الإدارات' : profile.primaryDepartment})`
+        : `Logged in as: ${profile.name} (${profile.primaryDepartment})`
     );
   };
 
@@ -321,7 +330,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f4f6f9] text-slate-800 flex flex-col font-sans">
       <ToastContainer position="bottom-right" theme="dark" />
       {/* Header */}
       <Header
@@ -329,6 +338,7 @@ export default function App() {
         onDepartmentChange={setActiveDepartment}
         currentUserProfile={currentUserProfile}
         onOpenUserProfileModal={() => setIsUserProfileModalOpen(true)}
+        onOpenLoginModal={() => setIsLoginModalOpen(true)}
         isArabic={isArabic}
         onToggleLanguage={() => setIsArabic(prev => !prev)}
         onOpenNewRecord={() => openNewRecordModal('task')}
@@ -432,6 +442,17 @@ export default function App() {
               onOpenNewRecord={() => openNewRecordModal('task')}
               onOpenExcelManager={() => setActiveTab('sheets')}
               onSaveRecord={handleSaveRecord}
+            />
+          )}
+
+          {activeTab === 'operational_tracks' && (
+            <OperationalTracksView
+              records={visibleRecords}
+              isArabic={isArabic}
+              activeDepartment={activeDepartment}
+              catalog={catalog}
+              onOpenNewRecord={(entity, wps) => openNewRecordModal(entity, wps)}
+              onSelectRecord={setSelectedRecord}
             />
           )}
 
@@ -887,6 +908,15 @@ export default function App() {
         isArabic={isArabic}
       />
 
+      {/* Login & Department Access Selection Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        currentUser={currentUserProfile}
+        onLogin={handleSelectUserProfile}
+        isArabic={isArabic}
+      />
+
       {/* Offline Sync Operations Queue Modal */}
       <SyncQueueModal
         isOpen={isSyncQueueOpen}
@@ -896,6 +926,16 @@ export default function App() {
         isOnline={isOnline}
         isArabic={isArabic}
       />
+
+      {/* Floating Orange Assistant Button matching reference image_7e8f4996.png */}
+      <button
+        onClick={() => setActiveTab('communication_hub')}
+        className="fixed bottom-6 left-6 z-40 bg-[#ff6600] hover:bg-orange-600 text-white font-bold px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 transition-all hover:scale-105 active:scale-95 border border-orange-400"
+        title={isArabic ? 'مساعد الخدمات والاتصالات' : 'Services Assistant & Comms Hub'}
+      >
+        <MessageSquare className="w-5 h-5 text-white" />
+        <span className="text-sm font-bold">{isArabic ? 'مساعد الخدمات' : 'Services Assistant'}</span>
+      </button>
     </div>
   );
 }

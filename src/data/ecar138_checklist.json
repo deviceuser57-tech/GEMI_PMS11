@@ -1,0 +1,232 @@
+[
+  {
+    "id": "ECAR-138-01",
+    "clause": "ECAR 138 §§138.101-109, 107",
+    "reqArabic": "شهادة الصلاحية الفنية الصادرة من سلطة الطيران المدني المصري ECAA وتقرير السلامة المعتمد Helideck Safety Report",
+    "reqEnglish": "ECAA Technical Airworthiness Certificate & Approved Helideck Safety Report",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "ECAA Certificate",
+    "referenceDoc": "ECAR 138 §§138.101-109, 107, ECAR 138.305",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-02",
+    "clause": "ECAR 138 §§138.201-207",
+    "reqArabic": "طابق بيانات الشهادة والتقرير والمواصفات والأبعاد والاسم المعلن بالمهبط مع سجلات السلطة",
+    "reqEnglish": "Verify matching certification data, physical dimensions, and announced name",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "ECAA Specs Matching",
+    "referenceDoc": "ECAR 138 §§138.201-207",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-03",
+    "clause": "ECAR 138 §§138.203, 138.213",
+    "reqArabic": "سجل مراجعات التعديلات وموافقة سلطة الطيران المدني المصري عند التغيير الذي يتطلب ذلك",
+    "reqEnglish": "Revision log of modifications and ECAA approval prior to structural changes",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "ECAA Revision Log",
+    "referenceDoc": "ECAR 138 §§138.203, 138.213, EAC 139-27 Ch. 3-5",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-04",
+    "clause": "ECAR 138.303, EAC 139-27 Ch. 2",
+    "reqArabic": "تحقق من تمييز المسؤول HLO، وخطوط الإخلاء، وسلسلة إيقاف العمليات عند الطوارئ",
+    "reqEnglish": "Verify HLO identification, evacuation lines, and emergency stop chain",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "HLO Chain of Command",
+    "referenceDoc": "ECAR 138.303, EAC 139-27 Ch. 2",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-05",
+    "clause": "ECAR 138.303, 138.317",
+    "reqArabic": "أجهزة قياس الرياح والملاحة والأنوار HLO، وتدريب واستجابة الطوارئ لمسؤول المهبط",
+    "reqEnglish": "Calibrated wind indicators, navigation lights, and HLO emergency training",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Nav & Wind Sensors",
+    "referenceDoc": "ECAR 138.303, 138.317",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-06",
+    "clause": "ECAR 138.105, 138.115, 138.203",
+    "reqArabic": "تقارير السلامة والدقة الفنية المعتمدة ومدى جاهزية المهبط لاستقبال الطائرات",
+    "reqEnglish": "Approved safety accuracy reports and helideck operational readiness",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Helideck Safety Report",
+    "referenceDoc": "ECAR 138.105, 138.115, 138.203",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-07",
+    "clause": "ECAR 138.307, 138.309",
+    "reqArabic": "تقييم المخاطر والدراسة الفنية للمهبط والاهتزازات والعوائق المرتفعة المحيطة",
+    "reqEnglish": "Risk assessment study covering helideck turbulence and surrounding obstacles",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Risk Assessment & Turbulence",
+    "referenceDoc": "ECAR 138.307, 138.309, EAC 139-27 Ch. 1-4, App. 1-A",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-08",
+    "clause": "ECAR Part 39 / Part 138",
+    "reqArabic": "راجع سجل الإصلاح والأعمال والإجراءات التصحيحية الموثقة مع منع التكرار",
+    "reqEnglish": "Maintenance and repair log review with corrective action verification",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Maintenance & CAPA Log",
+    "referenceDoc": "ECAR Part 39 / Part 138",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-09",
+    "clause": "ECAR 138.305, Helideck Safety Report",
+    "reqArabic": "ملف القوة البدنية والتجهيزات الفنية والمعايير المعتمدة لسطح الهبوط",
+    "reqEnglish": "Deck physical strength documentation and technical landing specifications",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Structural Strength",
+    "referenceDoc": "ECAR 138.305, Helideck Safety Report",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-10",
+    "clause": "ECAR 138.3, 138.307",
+    "reqArabic": "خطة طوارئ المهبط واختبار الملاحظات السريعة ومعدات الحريق والتفريغ",
+    "reqEnglish": "Helideck emergency response plan and rapid firefighting deployment checks",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Emergency Plan & Fire",
+    "referenceDoc": "ECAR 138.3, 138.307, EAC 139-27 Ch. 1",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-11",
+    "clause": "ECAR 138.305, PMS-17",
+    "reqArabic": "طابق الحمولة الهيكلية الكلية M-Value وحد الوزن M-TOW المعتمد مع السجلات",
+    "reqEnglish": "Verify structural M-value load limit and maximum takeoff weight MTOW",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "T-Value & MTOW (12.6T)",
+    "referenceDoc": "ECAR 138.305, PMS-17",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-12",
+    "clause": "ECAR 138.305",
+    "reqArabic": "اختبار وسائل الاتصال والمعلومات المرسلة للطائرة قبل الحركة VHF Air-Band Radio",
+    "reqEnglish": "VHF air-band radio communication link test prior to helicopter movement",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "VHF Aviation Radio",
+    "referenceDoc": "ECAR 138.305",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-13",
+    "clause": "ECAR 138.305, 138.317",
+    "reqArabic": "تحقق من أنها أجهزة معتمدة واختيار أجهزة الاتصالات اللاسلكية لمسؤول HLO",
+    "reqEnglish": "Approved explosion-proof portable radios for Helideck Landing Officer HLO",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Ex Portable Radios",
+    "referenceDoc": "ECAR 138.305, 138.317",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-14",
+    "clause": "ECAR 138.307(d)(3)-(4)",
+    "reqArabic": "وجود ووظيفة HLO والأنوار والشبكة المطاطية ومعدات الهبوط الأفقية",
+    "reqEnglish": "Operational status of touchdown netting, perimeter lights, and landing gear",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Landing Net & Lights",
+    "referenceDoc": "ECAR 138.307(d)(3)-(4), EAC 139-27 Ch. 1",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-15",
+    "clause": "ECAR 138.307(d)(4)",
+    "reqArabic": "قياس الأبعاد الفعلية ومطابقتها مع D-Value المصرح به (22.2 متر)",
+    "reqEnglish": "Physical dimensions measurement matching certified 22.2m D-value",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "D-Value Measurement",
+    "referenceDoc": "ECAR 138.307(d)(4)",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-16",
+    "clause": "ECAR 138.307(d)(6)-(9)",
+    "reqArabic": "المنطقة المحصورة والمحيطة 210° والحد من العوائق المرتفعة ضمن القوس المعتمد",
+    "reqEnglish": "210 degree obstacle free sector inspection and height compliance",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "210° Obstacle Free Sector",
+    "referenceDoc": "ECAR 138.307(d)(6)-(9), EAC 139-27 Ch. 1",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-17",
+    "clause": "ECAR 138.307(d)(18)",
+    "reqArabic": "اختبار معامل الاحتكاك لسطح TLOF ومقاومة الانزلاق (Friction Test >= 0.85)",
+    "reqEnglish": "Helideck surface friction coefficient test exceeding 0.85 threshold",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Surface Friction >= 0.85",
+    "referenceDoc": "ECAR 138.307(d)(18)",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-18",
+    "clause": "ECAR 138.307(c)(16)",
+    "reqArabic": "تصريف المياه وحجز الزيوت والوقود لمنع التسرب وملاءمة المزاريب",
+    "reqEnglish": "Helideck drainage channels and fuel interceptor spill prevention test",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Fuel & Water Drainage",
+    "referenceDoc": "ECAR 138.307(c)(16), EAC 139-27 Ch. 3",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-19",
+    "clause": "ECAR 138.307(d)(12)-(16)",
+    "reqArabic": "شبكات الأمان المحيطية بالمهبط Safety Nets وخلوها من التلف أو العوائق",
+    "reqEnglish": "Perimeter safety netting tension, drop test, and net frame integrity",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Perimeter Safety Nets",
+    "referenceDoc": "ECAR 138.307(d)(12)-(16)",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-20",
+    "clause": "ECAR 138.307, EAC 139-27",
+    "reqArabic": "نظام الإطفاء التلقائي الرغوي المدمج DIFFS / FOAM وحماية الطاقم HLO",
+    "reqEnglish": "Deck Integrated Fire Fighting System (DIFFS) foam nozzles discharge check",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "DIFFS Foam System",
+    "referenceDoc": "ECAR 138.307, EAC 139-27 Ch. 5, Safety Report",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-21",
+    "clause": "ECAR 138.311, EAC 139-27",
+    "reqArabic": "مراقبة اتجاه الرياح ومؤشر أجهزة القياس المعتمدة من سلطة الطيران المدني المصري (Windsock)",
+    "reqEnglish": "Illuminated wind direction indicator windsock visible from flight path",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "ECAA Windsock & Sensors",
+    "referenceDoc": "ECAR 138.311, EAC 139-27 Ch. 3",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-22",
+    "clause": "ECAR 138.313, 138.315",
+    "reqArabic": "علامات التميز D-Value و T-Value وعلامة المهبط H والمحيط الأصفر المضيء TLOF",
+    "reqEnglish": "D-value, T-value, H landing mark, and TLOF perimeter yellow paint markings",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "H Markings & TLOF Circle",
+    "referenceDoc": "ECAR 138.313, 138.315, EAC 139-27 Ch. 5",
+    "status": "Compliant"
+  },
+  {
+    "id": "ECAR-138-23",
+    "clause": "ECAR 138.317",
+    "reqArabic": "أنظمة الإضاءة الليلية TLOF/FATO الخضراء المعتمدة لدى ECAA وضوء الإشارة البرّاق Beacon",
+    "reqEnglish": "ECAA approved green LED perimeter lights and helideck identification beacon",
+    "category": "المعايير الميدانية والسجلات ذات الصلة",
+    "standard": "Green Perimeter & Beacon",
+    "referenceDoc": "ECAR 138.317, EAC 139-27 Ch. 6",
+    "status": "Compliant"
+  }
+]

@@ -33,6 +33,7 @@ import {
 
 export type ActiveTab =
   | 'dashboard'
+  | 'operational_tracks'
   | 'sheets'
   | 'wps'
   | 'gates'
@@ -205,11 +206,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     {
-      title: isArabic ? 'المسارات التشغيلية التخصصية (14 شيتاً)' : 'Specialized Operational Tracks (14)',
+      title: isArabic ? 'المسارات التشغيلية' : 'Operational Tracks',
       items: [
         {
+          id: 'operational_tracks' as ActiveTab,
+          label: isArabic ? 'مركز المسارات التشغيلية الموحد' : 'Master Operational Tracks Hub',
+          sub: isArabic ? 'تجمع كافة مسارات البارجة (المهبط، الإقامة، الطاقم...)' : 'Consolidated Barge Operational Hub',
+          icon: Layers,
+          badge: 'Master Tracks',
+          badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40'
+        },
+        {
           id: 'crew' as ActiveTab,
-          label: isArabic ? 'الطاقم والمانينج والشهادات' : 'Crew Competence Hub',
+          label: isArabic ? 'طاقم العمل والشهادات' : 'Crew Competence Hub',
           sub: isArabic ? '12 رتبة، 45 فرداً، تنبيهات ملونة' : '12 Roles, Manning & Alerts',
           icon: Users,
           badge: counts.crewAlerts > 0 ? `${counts.crewAlerts}` : undefined,
@@ -335,7 +344,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-64 lg:w-72 glass-sidebar border-r border-cyan-500/20 flex flex-col h-[calc(100vh-61px)] sticky top-[61px] shrink-0 select-none overflow-y-auto custom-scrollbar">
+    <aside className="w-64 lg:w-72 bg-[#0f2942] border-r border-[#1a3a5c] shadow-xl text-white flex flex-col h-[calc(100vh-61px)] sticky top-[61px] shrink-0 select-none overflow-y-auto custom-scrollbar">
       <div className="p-3 space-y-6">
         {navSections.map((section, idx) => (
           <div key={idx} className="space-y-1">

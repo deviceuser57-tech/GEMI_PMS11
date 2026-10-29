@@ -206,34 +206,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     {
-      title: isArabic ? 'المسارات التشغيلية' : 'Operational Tracks',
+      title: isArabic ? 'المسارات التشغيلية (Operational Tracks)' : 'Operational Tracks',
       items: [
         {
           id: 'operational_tracks' as ActiveTab,
-          label: isArabic ? 'مركز المسارات التشغيلية الموحد' : 'Master Operational Tracks Hub',
-          sub: isArabic ? 'تجمع كافة مسارات البارجة (المهبط، الإقامة، الطاقم...)' : 'Consolidated Barge Operational Hub',
+          label: isArabic ? 'مركز المسارات المجمع' : 'Master Operational Tracks Hub',
+          sub: isArabic ? 'نظرة عامة ومتابعة كافة المسارات' : 'Consolidated Operational Hub',
           icon: Layers,
-          badge: 'Master Tracks',
+          badge: 'Hub',
           badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40'
         },
         {
           id: 'crew' as ActiveTab,
-          label: isArabic ? 'طاقم العمل والشهادات' : 'Crew Competence Hub',
-          sub: isArabic ? '12 رتبة، 45 فرداً، تنبيهات ملونة' : '12 Roles, Manning & Alerts',
+          label: isArabic ? 'طاقم العمل والشهادات' : 'Crew Competence & Certs',
+          sub: isArabic ? '12 رتبة و 45 فرداً وتنبيهات الصلاحية' : '12 Roles & Cert Alerts',
           icon: Users,
           badge: counts.crewAlerts > 0 ? `${counts.crewAlerts}` : undefined,
           badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40'
         },
         {
           id: 'helideck' as ActiveTab,
-          label: isArabic ? 'مهبط الطائرات (WPS-19 ECAR 138)' : 'Helideck (ECAR 138)',
-          sub: isArabic ? 'سلطة الطيران المدني المصري ECAA' : 'Egyptian Civil Aviation ECAR 138',
+          label: isArabic ? 'مهبط الطائرات (ECAR 138)' : 'Helideck (ECAR 138)',
+          sub: isArabic ? 'سلطة الطيران المدني المصري ECAA' : 'ECAA Aviation Regulations',
           icon: Plane,
         },
         {
           id: 'accommodation' as ActiveTab,
           label: isArabic ? 'الإقامة والـ POB (WPS-15)' : 'Accommodation & POB',
-          sub: isArabic ? '250 سريراً معتمداً و 10 فحوصات' : '250 Berths & 10 MLC Checks',
+          sub: isArabic ? '250 سريراً معتمداً وفحوصات MLC' : '250 Berths & MLC Checks',
           icon: Bed,
         },
         {
@@ -357,10 +357,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
                 return (
-                  <button
+                  <a
                     key={item.id}
-                    onClick={() => onSelectTab(item.id)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left nav-item-3d group transition-all ${
+                    href={`#${item.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onSelectTab(item.id);
+                    }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left nav-item-3d group transition-all cursor-pointer ${
                       isActive
                         ? 'bg-[#ff6600] text-white font-bold border border-orange-400 shadow-lg shadow-orange-500/30'
                         : 'text-slate-300 hover:bg-[#0f2942] hover:text-white border border-slate-800/80'
@@ -391,7 +395,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         {item.badge}
                       </span>
                     )}
-                  </button>
+                  </a>
                 );
               })}
             </div>

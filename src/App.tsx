@@ -207,11 +207,14 @@ export default function App() {
   // User Profile & RBAC Department Access Control State
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile>(getStoredUserProfile);
   const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState<boolean>(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(() => {
+    return !localStorage.getItem('pms11_logged_in_session');
+  });
 
   const handleSelectUserProfile = (profile: UserProfile) => {
     setCurrentUserProfile(profile);
     saveUserProfile(profile);
+    localStorage.setItem('pms11_logged_in_session', 'true');
     if (profile.primaryDepartment !== 'All') {
       setActiveDepartment(profile.primaryDepartment);
     } else {
@@ -379,7 +382,7 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full overflow-y-auto space-y-4">
+        <main style={{ backgroundColor: '#134b6a' }} className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full overflow-y-auto space-y-4">
           {/* Active Department Scope Notification Banner */}
           {currentUserProfile.primaryDepartment !== 'All' && (
             <div className="bg-gradient-to-r from-slate-900 via-cyan-950/80 to-slate-900 border border-cyan-800/80 rounded-xl p-3 shadow-lg flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -930,11 +933,11 @@ export default function App() {
       {/* Floating Orange Assistant Button matching reference image_7e8f4996.png */}
       <button
         onClick={() => setActiveTab('communication_hub')}
-        className="fixed bottom-6 left-6 z-40 bg-[#ff6600] hover:bg-orange-600 text-white font-bold px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 transition-all hover:scale-105 active:scale-95 border border-orange-400"
+        className="fixed bottom-4 right-4 z-30 bg-[#ff6600] hover:bg-orange-600 text-white font-bold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 transition-all duration-200 hover:-translate-y-1 active:scale-95 border border-orange-400 text-xs"
         title={isArabic ? 'مساعد الخدمات والاتصالات' : 'Services Assistant & Comms Hub'}
       >
-        <MessageSquare className="w-5 h-5 text-white" />
-        <span className="text-sm font-bold">{isArabic ? 'مساعد الخدمات' : 'Services Assistant'}</span>
+        <MessageSquare className="w-4 h-4 text-white" />
+        <span className="font-bold">{isArabic ? 'مساعد الخدمات' : 'Services Assistant'}</span>
       </button>
     </div>
   );

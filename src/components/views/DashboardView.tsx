@@ -128,6 +128,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }));
   }, [auditLogs]);
 
+  const sheetsCompletionData = React.useMemo(() => {
+    return catalog.map(s => {
+      const targetEnt = s.targetEntity;
+      const sheetRecs = targetEnt ? records.filter(r => r.entity === targetEnt) : [];
+      const total = sheetRecs.length;
+      const closed = sheetRecs.filter(r => r.status === 'Closed' || r.status === 'Compliant' || r.status === 'Approved' || r.status === 'Verified').length;
+      const pct = total > 0 ? Math.round((closed / total) * 100) : 0;
+      return {
+        sheetName: s.sheetName,
+        arabicName: s.arabicName,
+        total,
+        closed,
+        completionRate: pct
+      };
+    });
+  }, [catalog, records]);
+
   // Prepare data for Recharts: Readiness for all 24 WPS packages
   const wpsRecords = records
     .filter(r => r.entity === 'wps')
@@ -201,7 +218,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* 4 Stat Summary Cards Row with Big Orange Numbers matching image_7e8f4996.png */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#0f2942] border border-[#1a3a5c] rounded-2xl p-6 shadow-lg text-center space-y-2 hover:border-orange-500/50 transition-all">
+        <div style={{ backgroundColor: '#6d2222' }} className="border border-[#1a3a5c] rounded-2xl p-6 shadow-lg text-center space-y-2 hover:border-orange-500/50 transition-all">
           <span className="text-4xl lg:text-5xl font-black text-[#ff6600] font-mono block">
             {records.filter(r => (r.entity === 'task' || r.entity === 'activity') && r.status !== 'Closed' && r.status !== 'Compliant').length || 0}
           </span>
@@ -569,9 +586,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       )}
 
-      {/* TAB 3: ANALYTICS & TRENDS */}
+      {/* TAB 3: ANALYTICS & 40-SHEETS COMPLETION BAR CHART */}
       {dashboardTab === 'analytics' && (
         <div className="space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl gsap-card">
+             <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+               <BarChart3 className="w-5 h-5 text-[#ff6600]" />
+               {isArabic ? 'نسبة الإنجاز لكل شيت من الـ 40 شيت (السجلات المغلقة مقابل الإجمالي)' : 'Completion Rate per Worksheet (Closed vs Total for all 40 Sheets)'}
+             </h3>
+             <p className="text-xs text-slate-400">
+               {isArabic ? 'رسم بياني يعرض نسبة الإنجاز تلقائياً لكل شيت عمل من الـ 40 شيت' : 'Bar chart displaying the completion percentage for each of the 40 work sheets automatically'}
+             </p>
+             <div className="h-[450px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={sheetsCompletionData} margin={{ top: 20, right: 30, left: 10, bottom: 70 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis dataKey="sheetName" stroke="#94a3b8" fontSize={10} interval={0} angle={-35} textAnchor="end" />
+                    <YAxis stroke="#94a3b8" fontSize={11} domain={[0, 100]} />
+                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '12px' }} />
+                    <Legend wrapperStyle={{ paddingTop: '15px' }} />
+                    <Bar dataKey="completionRate" fill="#ff6600" name={isArabic ? 'نسبة الإنجاز الفعلي (%)' : 'Completion Rate (%)'} radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+             </div>
+          </div>
+
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl gsap-card">
              <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
                <BarChart3 className="w-5 h-5 text-cyan-400" />

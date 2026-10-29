@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { BaseRecord, WorkbookSheetInfo, EntityType } from '../../types/pms';
+import { BaseRecord, WorkbookSheetInfo, EntityType, Department } from '../../types/pms';
+import { getStoredRecords, saveAllRecords } from '../../lib/storage';
+import { ALL_DEPARTMENTS } from '../../lib/rbac';
+import { toast } from 'react-toastify';
 import {
   FileSpreadsheet,
   Search,
@@ -13,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckSquare,
-  Square
+  Square,
+  X
 } from 'lucide-react';
 import { useGsapPageReveal } from '../../lib/animations';
 import * as XLSX from 'xlsx';
@@ -38,10 +42,45 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
   const [activeSheet, setActiveSheet] = useState<string>(selectedSheetName);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [urgencyFilter, setUrgencyFilter] = useState<'All' | 'Due Today' | 'Overdue'>('All');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkStatusModalOpen, setIsBulkStatusModalOpen] = useState(false);
+  const [isBulkDeptModalOpen, setIsBulkDeptModalOpen] = useState(false);
+  const [bulkStatusValue, setBulkStatusValue] = useState('Closed');
+  const [bulkDeptValue, setBulkDeptValue] = useState<Department>('Marine');
+
+  const handleBulkStatusSubmit = () => {
+    const allRecords = getStoredRecords();
+    const updated = allRecords.map(r => {
+      if (selectedIds.has(r.id)) {
+        return { ...r, status: bulkStatusValue as any, updated_at: new Date().toISOString() };
+      }
+      return r;
+    });
+    saveAllRecords(updated);
+    setSelectedIds(new Set());
+    setIsBulkStatusModalOpen(false);
+    toast.success(isArabic ? 'تم تحديث حالة السجلات المحددة بنجاح' : 'Bulk status updated successfully');
+    window.location.reload();
+  };
+
+  const handleBulkDeptSubmit = () => {
+    const allRecords = getStoredRecords();
+    const updated = allRecords.map(r => {
+      if (selectedIds.has(r.id)) {
+        return { ...r, department: bulkDeptValue, updated_at: new Date().toISOString() };
+      }
+      return r;
+    });
+    saveAllRecords(updated);
+    setSelectedIds(new Set());
+    setIsBulkDeptModalOpen(false);
+    toast.success(isArabic ? 'تم تعيين القسم الإداري للسجلات المحددة بنجاح' : 'Bulk department assigned successfully');
+    window.location.reload();
+  };
 
   const toggleSelectAll = () => {
     if (selectedIds.size === paginatedRecords.length) {
@@ -65,7 +104,7 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
     alert(isArabic ? 'تم تطبيق الإجراء الجماعي بنجاح' : 'Bulk action applied successfully');
   };
 
-  const containerRef = useGsapPageReveal<HTMLDivElement>([activeSheet, currentPage, statusFilter]);
+  const containerRef = useGsapPageReveal<HTMLDivElement>([activeSheet, currentPage, statusFilter, urgencyFilter]);
 
   // Keep activeSheet in sync with navigation from sidebar or workbook manager
   React.useEffect(() => {
@@ -92,12 +131,22 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
 
   const filteredRecords = sheetRecords.filter(r => {
     const matchesStatus = statusFilter === 'All' || r.status === statusFilter;
+
+    let matchesUrgency = true;
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    if (urgencyFilter === 'Due Today') {
+      matchesUrgency = Boolean(r.due_date && r.due_date.startsWith(todayStr));
+    } else if (urgencyFilter === 'Overdue') {
+      matchesUrgency = Boolean(r.due_date && new Date(r.due_date) < now && r.status !== 'Closed' && r.status !== 'Compliant');
+    }
+
     const matchesSearch =
       r.rid.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (r.description && r.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
       r.department.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
+    return matchesStatus && matchesUrgency && matchesSearch;
   });
 
   const totalPages = Math.ceil(filteredRecords.length / pageSize) || 1;
@@ -166,12 +215,42 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
           </div>
         </div>
 
+        {/* Visual Progress Bar for Sheet Completion */}
+        <div className="pt-3 border-t border-slate-800 space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-400 font-medium">
+              {isArabic ? 'نسبة الإنجاز والإغلاق للشيت (Closed Ratio):' : 'Sheet Closure Completion Ratio:'}
+            </span>
+            <span className="font-mono font-bold text-cyan-400">
+              {sheetRecords.filter(r => r.status === 'Closed' || r.status === 'Compliant' || r.status === 'Approved' || r.status === 'Verified').length} / {sheetRecords.length} ({sheetRecords.length > 0 ? Math.round((sheetRecords.filter(r => r.status === 'Closed' || r.status === 'Compliant' || r.status === 'Approved' || r.status === 'Verified').length / sheetRecords.length) * 100) : 0}%)
+            </span>
+          </div>
+          <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+            <div
+              className="bg-gradient-to-r from-[#ff6600] to-emerald-500 h-full transition-all duration-500 rounded-full"
+              style={{ width: `${sheetRecords.length > 0 ? Math.round((sheetRecords.filter(r => r.status === 'Closed' || r.status === 'Compliant' || r.status === 'Approved' || r.status === 'Verified').length / sheetRecords.length) * 100) : 0}%` }}
+            />
+          </div>
+        </div>
+
         {/* Bulk Action Toolbar */}
         {selectedIds.size > 0 && (
-          <div className="pt-3 border-t border-slate-800 flex items-center gap-4 text-xs bg-slate-950/50 p-2 rounded-xl">
-             <span className="text-slate-300 font-bold">{selectedIds.size} {isArabic ? 'سجل محدد' : 'records selected'}</span>
-             <button onClick={() => applyBulkAction('status')} className="px-3 py-1 bg-cyan-900 text-cyan-200 border border-cyan-700 rounded-lg">{isArabic ? 'تغيير الحالة جماعياً' : 'Bulk Status Update'}</button>
-             <button onClick={() => applyBulkAction('archive')} className="px-3 py-1 bg-rose-900 text-rose-200 border border-rose-700 rounded-lg">{isArabic ? 'أرشفة جماعية' : 'Bulk Archive'}</button>
+          <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs bg-slate-950/80 p-3 rounded-xl border border-cyan-500/40">
+             <span className="text-cyan-300 font-bold flex items-center gap-1.5">
+               <span>✓</span>
+               <span>{selectedIds.size} {isArabic ? 'سجل محدد للتعديل الجماعي' : 'records selected for bulk action'}</span>
+             </span>
+             <div className="flex items-center gap-2">
+               <button onClick={() => setIsBulkStatusModalOpen(true)} className="px-3 py-1.5 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 rounded-lg font-bold">
+                 {isArabic ? 'تحديث الحالة جماعياً...' : 'Bulk Status Update'}
+               </button>
+               <button onClick={() => setIsBulkDeptModalOpen(true)} className="px-3 py-1.5 bg-amber-950 hover:bg-amber-900 text-amber-300 border border-amber-800 rounded-lg font-bold">
+                 {isArabic ? 'تعيين الإدارة جماعياً...' : 'Bulk Department Assign'}
+               </button>
+               <button onClick={() => setSelectedIds(new Set())} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">
+                 {isArabic ? 'إلغاء التحديد' : 'Clear Selection'}
+               </button>
+             </div>
           </div>
         )}
 
@@ -238,6 +317,66 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
               {st === 'All' ? (isArabic ? 'الكل' : 'All') : st === 'OPEN' ? (isArabic ? 'OPEN (مفتوحة)' : 'OPEN') : st}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Floating Filter Bar */}
+      <div className="sticky top-16 z-20 bg-slate-900/95 backdrop-blur border border-cyan-500/30 rounded-2xl p-4 shadow-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-cyan-400 font-bold flex items-center gap-1.5">
+            <Filter className="w-4 h-4" />
+            <span>{isArabic ? 'شريط الفلترة العائم:' : 'Floating Filter Bar:'}</span>
+          </span>
+
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <span className="text-slate-400 text-[11px] px-2 font-medium">{isArabic ? 'الحالة:' : 'Status:'}</span>
+            {['All', 'OPEN', 'In Progress', 'Compliant', 'Closed'].map(st => (
+              <button
+                key={st}
+                onClick={() => {
+                  setStatusFilter(st);
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                  statusFilter === st
+                    ? 'bg-[#ff6600] text-white shadow-sm'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                {st === 'All' ? (isArabic ? 'الكل' : 'All') : st}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <span className="text-slate-400 text-[11px] px-2 font-medium">{isArabic ? 'الإلحاح:' : 'Urgency:'}</span>
+            {[
+              { id: 'All', labelAr: 'الكل', labelEn: 'All' },
+              { id: 'Due Today', labelAr: 'مستحق اليوم', labelEn: 'Due Today' },
+              { id: 'Overdue', labelAr: 'متأخر', labelEn: 'Overdue' }
+            ].map(urg => (
+              <button
+                key={urg.id}
+                onClick={() => {
+                  setUrgencyFilter(urg.id as any);
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                  urgencyFilter === urg.id
+                    ? 'bg-cyan-600 text-white shadow-sm'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                {isArabic ? urg.labelAr : urg.labelEn}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 font-mono text-[11px] text-slate-400">
+          <span>{isArabic ? 'النتائج المصفاة:' : 'Filtered Results:'}</span>
+          <span className="text-cyan-400 font-bold">{filteredRecords.length}</span>
+          <span>/ {sheetRecords.length}</span>
         </div>
       </div>
 
@@ -367,6 +506,78 @@ export const SheetBrowserView: React.FC<SheetBrowserViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Bulk Status Update Modal */}
+      {isBulkStatusModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl text-white">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="font-bold text-base">{isArabic ? 'تحديث الحالة جماعياً' : 'Bulk Status Update'}</h3>
+              <button onClick={() => setIsBulkStatusModalOpen(false)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-xs text-slate-300">
+              {isArabic ? `سيتم تطبيق الحالة الجديدة على عدد (${selectedIds.size}) سجل.` : `Applying new status to ${selectedIds.size} selected records.`}
+            </p>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">{isArabic ? 'الحالة المستهدفة:' : 'Target Status:'}</label>
+              <select
+                value={bulkStatusValue}
+                onChange={e => setBulkStatusValue(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-cyan-300 font-bold"
+              >
+                <option value="Closed">Closed (مغلق)</option>
+                <option value="Compliant">Compliant (مطابق)</option>
+                <option value="Approved">Approved (معتمد)</option>
+                <option value="In Progress">In Progress (قيد التنفيذ)</option>
+                <option value="OPEN">OPEN (مفتوح)</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setIsBulkStatusModalOpen(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 font-bold">
+                {isArabic ? 'إلغاء' : 'Cancel'}
+              </button>
+              <button onClick={handleBulkStatusSubmit} className="px-4 py-2 rounded-xl bg-[#ff6600] text-xs text-white font-bold">
+                {isArabic ? 'تأكيد التحديث الجماعي' : 'Confirm Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Department Assignment Modal */}
+      {isBulkDeptModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl text-white">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="font-bold text-base">{isArabic ? 'تعيين القسم الإداري جماعياً' : 'Bulk Department Assignment'}</h3>
+              <button onClick={() => setIsBulkDeptModalOpen(false)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-xs text-slate-300">
+              {isArabic ? `سيتم تعيين القسم الإداري لـ (${selectedIds.size}) سجل.` : `Assigning department to ${selectedIds.size} selected records.`}
+            </p>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">{isArabic ? 'القسم المستهدف:' : 'Target Department:'}</label>
+              <select
+                value={bulkDeptValue}
+                onChange={e => setBulkDeptValue(e.target.value as Department)}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-cyan-300 font-bold"
+              >
+                {ALL_DEPARTMENTS.filter(d => d !== 'All').map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setIsBulkDeptModalOpen(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300 font-bold">
+                {isArabic ? 'إلغاء' : 'Cancel'}
+              </button>
+              <button onClick={handleBulkDeptSubmit} className="px-4 py-2 rounded-xl bg-[#ff6600] text-xs text-white font-bold">
+                {isArabic ? 'تأكيد التعيين الجماعي' : 'Confirm Assignment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

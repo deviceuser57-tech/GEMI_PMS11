@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BaseRecord, Department } from '../../types/pms';
 import { getStoredDocuments } from '../../lib/documentRepository';
+import { toast } from 'react-toastify';
 import {
   MapPin,
   Layers,
@@ -669,9 +670,21 @@ export const DeckPlanView: React.FC<DeckPlanViewProps> = ({
               <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">{isArabic ? 'حالة المنطقة:' : 'Zone Status:'}</span>
-                  <span className="font-bold text-emerald-400 font-mono text-[11px]">
-                    {selectedHotspot.status}
-                  </span>
+                  <select
+                    value={selectedHotspot.status}
+                    onChange={(e) => {
+                      const newStatus = e.target.value as any;
+                      const updated = { ...selectedHotspot, status: newStatus };
+                      setSelectedHotspot(updated);
+                      toast.success(isArabic ? 'تم تحديث حالة منطقة العمل بنجاح' : 'Zone status updated successfully');
+                    }}
+                    className="bg-slate-900 border border-slate-700 text-cyan-300 rounded px-2 py-1 text-xs font-bold"
+                  >
+                    <option value="Operational">Operational</option>
+                    <option value="High Readiness">High Readiness</option>
+                    <option value="Under Maintenance">Under Maintenance</option>
+                    <option value="Action Required">Action Required</option>
+                  </select>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">{isArabic ? 'القسم المسؤول:' : 'Managing Dept:'}</span>
@@ -735,9 +748,27 @@ export const DeckPlanView: React.FC<DeckPlanViewProps> = ({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">{isArabic ? 'الحالة:' : 'Status:'}</span>
-                  <span className="font-bold text-cyan-300 font-mono text-[11px]">
-                    {selectedPinRecord.status}
-                  </span>
+                  <select
+                    value={selectedPinRecord.status}
+                    onChange={(e) => {
+                      const updated = {
+                        ...selectedPinRecord,
+                        status: e.target.value as any,
+                        updated_at: new Date().toISOString()
+                      };
+                      onUpdateRecord(updated);
+                      setSelectedPinRecord(updated);
+                      toast.success(isArabic ? 'تم تحديث حالة المعدة/السجل بنجاح' : 'Record status updated successfully');
+                    }}
+                    className="bg-slate-900 border border-slate-700 text-cyan-300 rounded px-2 py-1 text-xs font-bold"
+                  >
+                    <option value="OPEN">OPEN</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Compliant">Compliant</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Closed">Closed</option>
+                    <option value="Non-Compliant">Non-Compliant</option>
+                  </select>
                 </div>
               </div>
 
